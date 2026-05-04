@@ -31,6 +31,11 @@ import {
   Linkedin,
   Mail,
   CircleHelp,
+  Sun,
+  Moon,
+  Settings2,
+  Smartphone,
+  Monitor,
 } from "lucide-react"
 import {
   PieChart,
@@ -65,6 +70,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu"
 
 /* ============================================================================
  *  TYPES & STATE
@@ -604,12 +619,46 @@ const ftToM = (n: number) => n * 0.3048
 const CHART_COLORS = ["#22d3ee", "#38bdf8", "#0ea5e9", "#06b6d4", "#67e8f9", "#7dd3fc", "#a5f3fc", "#bae6fd"]
 
 /* ============================================================================
+ *  THEME HOOK — light / dark with localStorage persistence
+ * ==========================================================================*/
+
+type Theme = "light" | "dark"
+
+function useTheme(): [Theme, (t: Theme) => void, () => void] {
+  const [theme, setThemeState] = React.useState<Theme>("dark")
+
+  // Read the active theme from <html> on mount (set by no-flash inline script)
+  React.useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark")
+    setThemeState(isDark ? "dark" : "light")
+  }, [])
+
+  const apply = React.useCallback((t: Theme) => {
+    if (t === "dark") document.documentElement.classList.add("dark")
+    else document.documentElement.classList.remove("dark")
+    try {
+      localStorage.setItem("buildcalc-theme", t)
+    } catch {
+      /* ignore */
+    }
+    setThemeState(t)
+  }, [])
+
+  const toggle = React.useCallback(() => {
+    apply(theme === "dark" ? "light" : "dark")
+  }, [apply, theme])
+
+  return [theme, apply, toggle]
+}
+
+/* ============================================================================
  *  COMPONENT
  * ==========================================================================*/
 
 export default function Page() {
   const [state, dispatch] = React.useReducer(reducer, initialState)
   const { unit, orientation, inputs } = state
+  const [theme, , toggleTheme] = useTheme()
 
   const findings = React.useMemo(() => runIVE(inputs), [inputs])
   const estimate = React.useMemo(() => computeEstimate(inputs), [inputs])
@@ -745,8 +794,10 @@ export default function Page() {
         <Navbar
           unit={unit}
           orientation={orientation}
+          theme={theme}
           onUnit={(u) => dispatch({ type: "SET_UNIT", unit: u })}
           onOrientation={(o) => dispatch({ type: "SET_ORIENTATION", orientation: o })}
+          onToggleTheme={toggleTheme}
           onExport={handleExportPDF}
           isCompliant={isCompliant}
         />
@@ -790,96 +841,172 @@ export default function Page() {
 function Navbar({
   unit,
   orientation,
+  theme,
   onUnit,
   onOrientation,
+  onToggleTheme,
   onExport,
   isCompliant,
 }: {
   unit: Unit
   orientation: Orientation
+  theme: Theme
   onUnit: (u: Unit) => void
   onOrientation: (o: Orientation) => void
+  onToggleTheme: () => void
   onExport: () => void
   isCompliant: boolean
 }) {
+  const segBase = "rounded-full px-3 py-1 text-xs font-medium transition"
+  const segActive = "bg-cyan-500/15 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-300"
+  const segInactive = "text-muted-foreground hover:text-foreground"
+
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-slate-950/60 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <div className="relative grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950 neon-glow">
+    <header className="fixed top-0 z-50 w-full border-b border-slate-200/70 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/60">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
+        {/* BRAND */}
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950 neon-glow">
             <Building2 className="h-5 w-5" strokeWidth={2.5} />
           </div>
-          <div className="flex flex-col leading-tight">
-            <span className="font-mono text-sm font-semibold tracking-tight">
+          <div className="flex min-w-0 flex-col leading-tight">
+            <span className="truncate font-mono text-sm font-semibold tracking-tight">
               BuildCalc <span className="neon-text">Pro</span>
             </span>
-            <span className="hidden text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:block">
+            <span className="hidden truncate text-[10px] uppercase tracking-[0.18em] text-muted-foreground sm:block">
               Created by Siddhu Pogula
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1 md:flex">
-            <button
-              onClick={() => onUnit("sqft")}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium transition",
-                unit === "sqft" ? "bg-cyan-400/15 text-cyan-300" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
+        {/* DESKTOP CONTROLS */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Unit toggle — md+ */}
+          <div className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/60 p-1 dark:border-white/10 dark:bg-white/[0.03] md:flex">
+            <button onClick={() => onUnit("sqft")} className={cn(segBase, unit === "sqft" ? segActive : segInactive)}>
               sqft
             </button>
-            <button
-              onClick={() => onUnit("m2")}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium transition",
-                unit === "m2" ? "bg-cyan-400/15 text-cyan-300" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
+            <button onClick={() => onUnit("m2")} className={cn(segBase, unit === "m2" ? segActive : segInactive)}>
               m²
             </button>
           </div>
 
-          <div className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] p-1 lg:flex">
+          {/* Orientation toggle — lg+ */}
+          <div className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/60 p-1 dark:border-white/10 dark:bg-white/[0.03] lg:flex">
             <button
               onClick={() => onOrientation("portrait")}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium transition",
-                orientation === "portrait" ? "bg-cyan-400/15 text-cyan-300" : "text-muted-foreground hover:text-foreground",
-              )}
+              className={cn(segBase, orientation === "portrait" ? segActive : segInactive)}
             >
+              <Smartphone className="mr-1 inline h-3 w-3" />
               Portrait
             </button>
             <button
               onClick={() => onOrientation("landscape")}
-              className={cn(
-                "rounded-full px-3 py-1 text-xs font-medium transition",
-                orientation === "landscape" ? "bg-cyan-400/15 text-cyan-300" : "text-muted-foreground hover:text-foreground",
-              )}
+              className={cn(segBase, orientation === "landscape" ? segActive : segInactive)}
             >
+              <Monitor className="mr-1 inline h-3 w-3" />
               Landscape
             </button>
           </div>
 
+          {/* Compliance badge — sm+ */}
           <Badge
             variant="outline"
             className={cn(
-              "hidden border-white/10 bg-white/[0.03] font-mono text-[10px] sm:flex",
-              isCompliant ? "text-emerald-300" : "text-amber-300",
+              "hidden border-slate-200 bg-white/60 font-mono text-[10px] dark:border-white/10 dark:bg-white/[0.03] sm:flex",
+              isCompliant
+                ? "text-emerald-700 dark:text-emerald-300"
+                : "text-amber-700 dark:text-amber-300",
             )}
           >
-            <span className={cn("mr-1.5 h-1.5 w-1.5 rounded-full", isCompliant ? "bg-emerald-400" : "bg-amber-400")} />
+            <span
+              className={cn(
+                "mr-1.5 h-1.5 w-1.5 rounded-full",
+                isCompliant ? "bg-emerald-500 dark:bg-emerald-400" : "bg-amber-500 dark:bg-amber-400",
+              )}
+            />
             {isCompliant ? "IS-CODE OK" : "REVIEW"}
           </Badge>
 
+          {/* Theme toggle — always visible */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                size="icon"
+                variant="outline"
+                onClick={onToggleTheme}
+                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+                className="h-9 w-9 shrink-0 border-slate-200 bg-white/60 hover:bg-white dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
+              >
+                <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+                <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
+            </TooltipContent>
+          </Tooltip>
+
+          {/* Mobile settings — visible below lg */}
+          <div className="lg:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  aria-label="Settings"
+                  className="h-9 w-9 shrink-0 border-slate-200 bg-white/60 hover:bg-white dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Units
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={unit} onValueChange={(v) => onUnit(v as Unit)}>
+                  <DropdownMenuRadioItem value="sqft">Square Feet (sqft)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="m2">Square Metres (m²)</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
+                  PDF Orientation
+                </DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  value={orientation}
+                  onValueChange={(v) => onOrientation(v as Orientation)}
+                >
+                  <DropdownMenuRadioItem value="portrait">
+                    <Smartphone className="mr-2 h-3.5 w-3.5" /> Portrait
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="landscape">
+                    <Monitor className="mr-2 h-3.5 w-3.5" /> Landscape
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled className="opacity-100">
+                  <span className="flex items-center gap-2 text-xs">
+                    <span
+                      className={cn(
+                        "h-1.5 w-1.5 rounded-full",
+                        isCompliant ? "bg-emerald-500" : "bg-amber-500",
+                      )}
+                    />
+                    {isCompliant ? "IS-Code: All Clear" : "IS-Code: Review Needed"}
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Export — primary CTA */}
           <Button
             size="sm"
             onClick={onExport}
-            className="bg-gradient-to-r from-cyan-400 to-sky-500 text-slate-950 hover:from-cyan-300 hover:to-sky-400 neon-glow"
+            className="shrink-0 bg-gradient-to-r from-cyan-500 to-sky-600 text-white hover:from-cyan-400 hover:to-sky-500 dark:from-cyan-400 dark:to-sky-500 dark:text-slate-950 dark:hover:from-cyan-300 dark:hover:to-sky-400 neon-glow"
           >
             <Download className="h-4 w-4" />
-            Export PDF
+            <span className="hidden sm:inline">Export PDF</span>
           </Button>
         </div>
       </div>
@@ -1046,18 +1173,34 @@ function InputPanel({
   return (
     <div className="rounded-3xl glass p-1">
       <Tabs defaultValue="project" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-white/[0.03] p-1">
-          <TabsTrigger value="project" className="data-[state=active]:bg-cyan-400/15 data-[state=active]:text-cyan-200">
-            <Building2 className="h-3.5 w-3.5" /> Project
+        <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-slate-100/70 p-1 dark:bg-white/[0.03]">
+          <TabsTrigger
+            value="project"
+            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+          >
+            <Building2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Project</span>
           </TabsTrigger>
-          <TabsTrigger value="structure" className="data-[state=active]:bg-cyan-400/15 data-[state=active]:text-cyan-200">
-            <Layers3 className="h-3.5 w-3.5" /> Structure
+          <TabsTrigger
+            value="structure"
+            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+          >
+            <Layers3 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Structure</span>
           </TabsTrigger>
-          <TabsTrigger value="foundation" className="data-[state=active]:bg-cyan-400/15 data-[state=active]:text-cyan-200">
-            <Compass className="h-3.5 w-3.5" /> Foundation
+          <TabsTrigger
+            value="foundation"
+            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+          >
+            <Compass className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Foundation</span>
           </TabsTrigger>
-          <TabsTrigger value="rates" className="data-[state=active]:bg-cyan-400/15 data-[state=active]:text-cyan-200">
-            <Banknote className="h-3.5 w-3.5" /> Rates
+          <TabsTrigger
+            value="rates"
+            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+          >
+            <Banknote className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Rates</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1815,8 +1958,10 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
  * ==========================================================================*/
 
 function Footer() {
+  const linkClass =
+    "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-cyan-500/10 hover:text-cyan-700 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300"
   return (
-    <footer className="border-t border-white/10 bg-slate-950/40 py-10 backdrop-blur-xl">
+    <footer className="border-t border-slate-200 bg-white/50 py-10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-3">
           <div>
@@ -1832,7 +1977,7 @@ function Footer() {
               Production-grade residential construction estimator with an embedded IS Code reasoning engine for the
               Indian market.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-cyan-300">
+            <div className="mt-4 flex items-center gap-2 text-xs text-cyan-700 dark:text-cyan-300">
               <Sparkles className="h-3 w-3" />
               <span className="font-mono uppercase tracking-[0.2em]">Created by Siddhu Pogula</span>
             </div>
@@ -1841,32 +1986,77 @@ function Footer() {
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Standards Referenced</div>
             <ul className="mt-3 space-y-2 text-sm">
-              <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-cyan-400" /> IS 456 : 2000 — Plain & Reinforced Concrete</li>
-              <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-cyan-400" /> IS 875 (Part 3) : 2015 — Wind Loads</li>
-              <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-cyan-400" /> IS 1893 (Part 1) : 2016 — Seismic Design</li>
-              <li className="flex items-center gap-2"><BookOpen className="h-3.5 w-3.5 text-cyan-400" /> IS 1904 / IS 4326 / NBC 2016</li>
+              <li className="flex items-start gap-2">
+                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                IS 456 : 2000 — Plain &amp; Reinforced Concrete
+              </li>
+              <li className="flex items-start gap-2">
+                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                IS 875 (Part 3) : 2015 — Wind Loads
+              </li>
+              <li className="flex items-start gap-2">
+                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                IS 1893 (Part 1) : 2016 — Seismic Design
+              </li>
+              <li className="flex items-start gap-2">
+                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                IS 1904 / IS 4326 / NBC 2016
+              </li>
             </ul>
           </div>
 
           <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Contact</div>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li className="flex items-center gap-2"><Mail className="h-3.5 w-3.5 text-cyan-400" /> hello@buildcalc.pro</li>
-              <li className="flex items-center gap-2"><Github className="h-3.5 w-3.5 text-cyan-400" /> github.com/siddhu-pogula</li>
-              <li className="flex items-center gap-2"><Linkedin className="h-3.5 w-3.5 text-cyan-400" /> linkedin.com/in/siddhu-pogula</li>
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Connect</div>
+            <ul className="mt-3 space-y-1">
+              <li>
+                <a
+                  href="https://github.com/P-Siddhu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                  aria-label="Siddhu Pogula on GitHub"
+                >
+                  <Github className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                  <span>github.com/P-Siddhu</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="https://www.linkedin.com/in/siddhu-pogula"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={linkClass}
+                  aria-label="Siddhu Pogula on LinkedIn"
+                >
+                  <Linkedin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                  <span>linkedin.com/in/siddhu-pogula</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="mailto:siddhupogula7@gmail.com"
+                  className={linkClass}
+                  aria-label="Email Siddhu Pogula"
+                >
+                  <Mail className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
+                  <span>siddhupogula7@gmail.com</span>
+                </a>
+              </li>
             </ul>
 
-            <div className="mt-4 rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-3 text-[11px] leading-relaxed text-amber-200/90">
-              <strong className="text-amber-200">Disclaimer:</strong> Estimates are indicative, derived from
-              residential thumb-rules. Final structural design must be certified by a licensed structural engineer
-              before construction.
+            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/[0.04] dark:text-amber-200/90">
+              <strong className="text-amber-700 dark:text-amber-200">Disclaimer:</strong> Estimates are indicative,
+              derived from residential thumb-rules. Final structural design must be certified by a licensed
+              structural engineer before construction.
             </div>
           </div>
         </div>
 
         <div className="hairline mt-10" />
         <div className="mt-6 flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} BuildCalc Pro · Created by Siddhu Pogula · All rights reserved.</span>
+          <span className="text-center sm:text-left">
+            © {new Date().getFullYear()} BuildCalc Pro · Created by Siddhu Pogula · All rights reserved.
+          </span>
           <span className="font-mono">v1.0 · IS-Code Engine 2026</span>
         </div>
       </div>

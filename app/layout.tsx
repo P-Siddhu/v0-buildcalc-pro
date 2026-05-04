@@ -20,16 +20,33 @@ export const metadata: Metadata = {
     "BuildCalc Pro",
     "Siddhu Pogula",
   ],
-  authors: [{ name: "Siddhu Pogula" }],
+  authors: [{ name: "Siddhu Pogula", url: "https://github.com/P-Siddhu" }],
   creator: "Siddhu Pogula",
 }
 
 export const viewport: Viewport = {
-  themeColor: "#020617",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f8fafc" },
+    { media: "(prefers-color-scheme: dark)", color: "#020617" },
+  ],
   userScalable: true,
   width: "device-width",
   initialScale: 1,
 }
+
+// No-flash theme initializer — runs before React hydrates.
+const themeInitScript = `
+(function(){
+  try {
+    var t = localStorage.getItem('buildcalc-theme');
+    if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark';
+    if (t === 'dark') document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  } catch (_) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+`
 
 export default function RootLayout({
   children,
@@ -37,7 +54,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable} dark`}>
+    <html lang="en" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="font-sans antialiased bg-background text-foreground">
         {children}
         {process.env.NODE_ENV === "production" && <Analytics />}
