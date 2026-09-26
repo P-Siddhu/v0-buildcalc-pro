@@ -2042,8 +2042,8 @@ function ResultsPanel({
       {/* CHART */}
       <div className="rounded-3xl glass p-5">
         <h4 className="text-sm font-semibold tracking-tight">Cost Composition</h4>
-        <div className="mt-3 h-56 min-h-56 min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
+<div className="mt-3 h-56 min-h-56 min-w-0">
+            <ResponsiveContainer width="100%" height={224} minWidth={1} minHeight={1}>
             <PieChart>
               <Pie
                 data={pieData}
@@ -2201,7 +2201,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
         </div>
 
         <div className="mt-5 h-72 min-h-72 min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height={288} minWidth={1} minHeight={1}>
             <BarChart data={barData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
               <XAxis
