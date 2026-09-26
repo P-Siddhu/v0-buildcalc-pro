@@ -36,6 +36,19 @@ import {
   Settings2,
   Smartphone,
   Monitor,
+  Home,
+  Plus,
+  Trash2,
+  Copy,
+  Undo2,
+  Redo2,
+  ZoomIn,
+  ZoomOut,
+  Move,
+  DoorOpen,
+  PanelTop,
+  RotateCcw,
+  ChevronsUp,
 } from "lucide-react"
 import {
   PieChart,
@@ -812,6 +825,13 @@ export default function Page() {
             onReset={() => dispatch({ type: "RESET" })}
           />
 
+          <HousePlanner
+            plotLength={inputs.plotLength}
+            plotWidth={inputs.plotWidth}
+            builtUpArea={inputs.builtUpArea}
+            onBuiltUpAreaChange={(area) => set("builtUpArea", area)}
+          />
+
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-5">
             {/* INPUT COLUMN */}
             <div className="lg:col-span-3">
@@ -832,6 +852,223 @@ export default function Page() {
       </div>
     </TooltipProvider>
   )
+}
+
+/* ============================================================================
+ *  HOUSE PLANNER + 2D FLOOR PLAN
+ * ==========================================================================*/
+
+type PlannerRoom = {
+  id: string
+  name: string
+  preset: string
+  length: number
+  width: number
+  unit: "ft" | "m"
+  door: number
+  windows: number
+  notes: string
+  x: number
+  y: number
+}
+
+type PlannerFloor = "ground" | "first" | "second"
+
+const ROOM_PRESETS = [
+  "Living / Hall", "Master Bedroom", "Bedroom", "Kitchen", "Dining", "Bathroom", "Toilet",
+  "Pooja Room", "Utility", "Store Room", "Balcony", "Staircase", "Parking", "Custom Room",
+]
+
+const initialPlannerRooms: PlannerRoom[] = [
+  { id: "living", name: "Living / Hall", preset: "Living / Hall", length: 16, width: 12, unit: "ft", door: 1, windows: 2, notes: "Main family gathering space", x: 4, y: 4 },
+  { id: "kitchen", name: "Kitchen", preset: "Kitchen", length: 10, width: 8, unit: "ft", door: 1, windows: 1, notes: "Provide exhaust and service access", x: 22, y: 4 },
+  { id: "master", name: "Master Bedroom", preset: "Master Bedroom", length: 14, width: 12, unit: "ft", door: 1, windows: 2, notes: "", x: 4, y: 18 },
+  { id: "bath", name: "Bathroom", preset: "Bathroom", length: 7, width: 5, unit: "ft", door: 1, windows: 1, notes: "Wet area", x: 22, y: 18 },
+]
+
+function roomArea(room: PlannerRoom) {
+  const factor = room.unit === "m" ? 10.7639 : 1
+  return room.length * room.width * factor
+}
+
+function HousePlanner({
+  plotLength,
+  plotWidth,
+  builtUpArea,
+  onBuiltUpAreaChange,
+}: {
+  plotLength: number
+  plotWidth: number
+  builtUpArea: number
+  onBuiltUpAreaChange: (area: number) => void
+}) {
+  const [floor, setFloor] = React.useState<PlannerFloor>("ground")
+  const [plannerPlotLength, setPlannerPlotLength] = React.useState(plotLength)
+  const [plannerPlotWidth, setPlannerPlotWidth] = React.useState(plotWidth)
+  const [plotUnit, setPlotUnit] = React.useState<"ft" | "m">("ft")
+  const [plotOrientation, setPlotOrientation] = React.useState("North")
+  const [floors, setFloors] = React.useState("Ground")
+  const [setbacks, setSetbacks] = React.useState({ front: 5, rear: 3, left: 3, right: 3 })
+  const [roomsByFloor, setRoomsByFloor] = React.useState<Record<PlannerFloor, PlannerRoom[]>>({
+    ground: initialPlannerRooms,
+    first: [],
+    second: [],
+  })
+  const [selectedId, setSelectedId] = React.useState("living")
+  const [zoom, setZoom] = React.useState(1)
+  const [history, setHistory] = React.useState<PlannerRoom[][]>([])
+  const [future, setFuture] = React.useState<PlannerRoom[][]>([])
+  const [drag, setDrag] = React.useState<{ id: string; x: number; y: number; px: number; py: number } | null>(null)
+
+  const rooms = roomsByFloor[floor]
+  const selected = rooms.find((room) => room.id === selectedId) ?? rooms[0]
+  const plotArea = plannerPlotLength * plannerPlotWidth
+  const totalRoomArea = rooms.reduce((sum, room) => sum + roomArea(room), 0)
+  const totalBuiltUp = Object.values(roomsByFloor).reduce((sum, floorRooms) => sum + floorRooms.reduce((s, room) => s + roomArea(room), 0), 0)
+  const remainingPlot = Math.max(0, plotArea - totalRoomArea)
+
+  React.useEffect(() => {
+    if (totalBuiltUp > 0 && Math.round(totalBuiltUp) !== Math.round(builtUpArea)) onBuiltUpAreaChange(Math.round(totalBuiltUp))
+  }, [totalBuiltUp, builtUpArea])
+
+  const updateRooms = (next: PlannerRoom[], record = true) => {
+    if (record) {
+      setHistory((stack) => [...stack.slice(-19), rooms])
+      setFuture([])
+    }
+    setRoomsByFloor((all) => ({ ...all, [floor]: next }))
+  }
+
+  const updateSelected = (patch: Partial<PlannerRoom>) => {
+    if (!selected) return
+    updateRooms(rooms.map((room) => room.id === selected.id ? { ...room, ...patch } : room))
+  }
+
+  const addRoom = () => {
+    const id = `room-${Date.now()}`
+    const next: PlannerRoom = { id, name: "Bedroom", preset: "Bedroom", length: 10, width: 10, unit: "ft", door: 1, windows: 2, notes: "", x: 8, y: 8 }
+    updateRooms([...rooms, next])
+    setSelectedId(id)
+  }
+
+  const duplicateRoom = () => {
+    if (!selected) return
+    const id = `room-${Date.now()}`
+    updateRooms([...rooms, { ...selected, id, name: `${selected.name} Copy`, x: selected.x + 3, y: selected.y + 3 }])
+    setSelectedId(id)
+  }
+
+  const deleteRoom = () => {
+    if (!selected) return
+    updateRooms(rooms.filter((room) => room.id !== selected.id))
+    setSelectedId(rooms.find((room) => room.id !== selected.id)?.id ?? "")
+  }
+
+  const undo = () => {
+    const previous = history.at(-1)
+    if (!previous) return
+    setFuture((stack) => [...stack, rooms])
+    setHistory((stack) => stack.slice(0, -1))
+    updateRooms(previous, false)
+  }
+
+  const redo = () => {
+    const next = future.at(-1)
+    if (!next) return
+    setHistory((stack) => [...stack, rooms])
+    setFuture((stack) => stack.slice(0, -1))
+    updateRooms(next, false)
+  }
+
+  const onRoomPointerDown = (event: React.PointerEvent, room: PlannerRoom) => {
+    event.currentTarget.setPointerCapture(event.pointerId)
+    setSelectedId(room.id)
+    setDrag({ id: room.id, x: room.x, y: room.y, px: event.clientX, py: event.clientY })
+  }
+
+  const onRoomPointerMove = (event: React.PointerEvent) => {
+    if (!drag) return
+    const dx = (event.clientX - drag.px) / (8 * zoom)
+    const dy = (event.clientY - drag.py) / (8 * zoom)
+    setRoomsByFloor((all) => ({ ...all, [floor]: rooms.map((room) => room.id === drag.id ? { ...room, x: Math.max(1, drag.x + dx), y: Math.max(1, drag.y + dy) } : room) }))
+  }
+
+  const finishDrag = () => {
+    if (!drag) return
+    setHistory((stack) => [...stack.slice(-19), rooms])
+    setFuture([])
+    setDrag(null)
+  }
+
+  const floorButtons: { id: PlannerFloor; label: string }[] = [
+    { id: "ground", label: "GROUND FLOOR" }, { id: "first", label: "FIRST FLOOR" }, { id: "second", label: "SECOND FLOOR" },
+  ]
+
+  return (
+    <section className="mt-10 rounded-3xl glass p-4 sm:p-6" id="house-planner">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2 text-cyan-700 dark:text-cyan-300"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight">Plan rooms. See quantities. Estimate with confidence.</h2>
+          <p className="mt-1 max-w-2xl text-sm text-muted-foreground">A preliminary architectural planning surface. Generated layouts are not construction drawings and require professional review.</p>
+        </div>
+        <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom</div>
+      </div>
+
+      <div className="mt-6 grid gap-4 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-6">
+        <PlannerNumber label="Plot length" value={plannerPlotLength} onChange={setPlannerPlotLength} suffix={plotUnit} />
+        <PlannerNumber label="Plot width" value={plannerPlotWidth} onChange={setPlannerPlotWidth} suffix={plotUnit} />
+        <PlannerSelect label="Plot unit" value={plotUnit} options={["ft", "m"]} onChange={(v) => setPlotUnit(v as "ft" | "m")} />
+        <PlannerSelect label="North / entry" value={plotOrientation} options={["North", "South", "East", "West"]} onChange={setPlotOrientation} />
+        <PlannerSelect label="Floors" value={floors} options={["Ground", "G+1", "G+2"]} onChange={setFloors} />
+        <div className="flex items-end"><Badge variant="secondary" className="h-9 w-full justify-center">{plotArea.toLocaleString()} {plotUnit === "ft" ? "sqft" : "m²"} plot</Badge></div>
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-border/70 pb-3">
+        {floorButtons.map((item) => <Button key={item.id} size="sm" variant={floor === item.id ? "default" : "outline"} onClick={() => { setFloor(item.id); setSelectedId(roomsByFloor[item.id][0]?.id ?? "") }}>{item.label}<Badge variant="secondary" className="ml-1">{roomsByFloor[item.id].length}</Badge></Button>)}
+        <div className="ml-auto flex items-center gap-1"><Button size="icon" variant="ghost" onClick={undo} disabled={!history.length} aria-label="Undo"><Undo2 /></Button><Button size="icon" variant="ghost" onClick={redo} disabled={!future.length} aria-label="Redo"><Redo2 /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.min(1.8, value + 0.15))} aria-label="Zoom in"><ZoomIn /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.max(0.65, value - 0.15))} aria-label="Zoom out"><ZoomOut /></Button><Button size="icon" variant="ghost" onClick={() => setZoom(1)} aria-label="Reset zoom"><RotateCcw /></Button></div>
+      </div>
+
+      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
+          <svg viewBox="0 0 100 70" className="h-[420px] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
+            <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
+            <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
+            <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-cyan-600 dark:text-cyan-400" />
+            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-amber-500" />
+            <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
+            <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#0891b2" : "#334155"} fillOpacity="0.88" stroke={active ? "#67e8f9" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#67e8f9" strokeWidth="1" />}</g> })}
+          </svg>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
+          <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-cyan-400/60 bg-cyan-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" /></button>)}</div>
+          {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-cyan-500/10 p-2 text-xs text-cyan-800 dark:text-cyan-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">1 Project setup</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">2 Rooms</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
+    </section>
+  )
+}
+
+function PlannerNumber({ label, value, onChange, suffix }: { label: string; value: number; onChange: (value: number) => void; suffix?: string }) {
+  return <div className="flex flex-col gap-1"><Label className="text-xs text-muted-foreground">{label}</Label><div className="relative"><Input type="number" value={value} onChange={(event) => onChange(Number(event.target.value))} className="h-9 pr-10" /><span className="pointer-events-none absolute right-2 top-2 text-xs text-muted-foreground">{suffix}</span></div></div>
+}
+
+function PlannerText({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+  return <div className="flex flex-col gap-1"><Label className="text-xs text-muted-foreground">{label}</Label><Input value={value} onChange={(event) => onChange(event.target.value)} className="h-9" /></div>
+}
+
+function PlannerSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+  return <div className="flex flex-col gap-1"><Label className="text-xs text-muted-foreground">{label}</Label><Select value={value} onValueChange={onChange}><SelectTrigger className="h-9"><SelectValue /></SelectTrigger><SelectContent>{options.map((option) => <SelectItem key={option} value={option}>{option}</SelectItem>)}</SelectContent></Select></div>
+}
+
+function PlannerMetric({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-xl border border-border/70 bg-background/40 p-3"><div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div><div className="mt-1 font-mono text-sm font-semibold">{value}</div></div>
 }
 
 /* ============================================================================
