@@ -49,6 +49,15 @@ import {
   PanelTop,
   RotateCcw,
   ChevronsUp,
+  LayoutDashboard,
+  Map,
+  ClipboardList,
+  FileSpreadsheet,
+  Settings,
+  Save,
+  Maximize2,
+  WandSparkles,
+  Eye,
 } from "lucide-react"
 import {
   PieChart,
@@ -672,6 +681,18 @@ export default function Page() {
   const [state, dispatch] = React.useReducer(reducer, initialState)
   const { unit, orientation, inputs } = state
   const [theme, , toggleTheme] = useTheme()
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
+  const [activeModule, setActiveModule] = React.useState("Dashboard")
+
+  React.useEffect(() => {
+    const updateProgress = () => {
+      const max = document.documentElement.scrollHeight - window.innerHeight
+      document.documentElement.style.setProperty("--scroll-progress", `${max > 0 ? (window.scrollY / max) * 100 : 0}%`)
+    }
+    updateProgress()
+    window.addEventListener("scroll", updateProgress, { passive: true })
+    return () => window.removeEventListener("scroll", updateProgress)
+  }, [])
 
   const findings = React.useMemo(() => runIVE(inputs), [inputs])
   const estimate = React.useMemo(() => computeEstimate(inputs), [inputs])
@@ -803,7 +824,14 @@ export default function Page() {
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="min-h-screen text-foreground">
+      <div className="min-h-screen text-foreground" id="top">
+        <div className="scroll-progress" aria-hidden="true" />
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((value) => !value)}
+          activeModule={activeModule}
+          onNavigate={setActiveModule}
+        />
         <Navbar
           unit={unit}
           orientation={orientation}
@@ -815,7 +843,7 @@ export default function Page() {
           isCompliant={isCompliant}
         />
 
-        <main className="mx-auto max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
+        <main className="app-workspace mx-auto max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
           <Hero
             estimate={estimate}
             isCompliant={isCompliant}
@@ -849,6 +877,7 @@ export default function Page() {
         </main>
 
         <Footer />
+        <MobileBottomNav activeModule={activeModule} onNavigate={setActiveModule} />
       </div>
     </TooltipProvider>
   )
@@ -919,6 +948,8 @@ function HousePlanner({
   const [history, setHistory] = React.useState<PlannerRoom[][]>([])
   const [future, setFuture] = React.useState<PlannerRoom[][]>([])
   const [drag, setDrag] = React.useState<{ id: string; x: number; y: number; px: number; py: number } | null>(null)
+  const [vastuMode, setVastuMode] = React.useState(false)
+  const [isArranging, setIsArranging] = React.useState(false)
 
   const rooms = roomsByFloor[floor]
   const selected = rooms.find((room) => room.id === selectedId) ?? rooms[0]
@@ -1000,6 +1031,28 @@ function HousePlanner({
     setDrag(null)
   }
 
+  const autoArrange = () => {
+    setIsArranging(true)
+    const arranged = rooms.map((room, index) => ({
+      ...room,
+      x: 4 + (index % 3) * 30,
+      y: 5 + Math.floor(index / 3) * 22,
+    }))
+    updateRooms(arranged)
+    window.setTimeout(() => setIsArranging(false), 650)
+  }
+
+  const optimizeLayout = () => {
+    setIsArranging(true)
+    const optimized = rooms.map((room, index) => ({
+      ...room,
+      x: index % 2 === 0 ? 5 : 52,
+      y: 5 + Math.floor(index / 2) * 22,
+    }))
+    updateRooms(optimized)
+    window.setTimeout(() => setIsArranging(false), 650)
+  }
+
   const floorButtons: { id: PlannerFloor; label: string }[] = [
     { id: "ground", label: "GROUND FLOOR" }, { id: "first", label: "FIRST FLOOR" }, { id: "second", label: "SECOND FLOOR" },
   ]
@@ -1008,12 +1061,17 @@ function HousePlanner({
     <section className="mt-10 rounded-3xl glass p-4 sm:p-6" id="house-planner">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <div className="flex items-center gap-2 text-cyan-700 dark:text-cyan-300"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
+          <div className="flex items-center gap-2 text-primary"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight">Plan rooms. See quantities. Estimate with confidence.</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">A preliminary architectural planning surface. Generated layouts are not construction drawings and require professional review.</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" onClick={autoArrange} disabled={isArranging}><WandSparkles data-icon="inline-start" /> Auto arrange</Button>
+          <Button size="sm" variant="outline" onClick={optimizeLayout} disabled={isArranging}><Sparkles data-icon="inline-start" /> Optimize</Button>
+          <Button size="sm" variant={vastuMode ? "default" : "outline"} onClick={() => setVastuMode((value) => !value)}><Eye data-icon="inline-start" /> Vastu {vastuMode ? "on" : "off"}</Button>
+        </div>
       </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom <span className="rounded-full bg-muted px-2 py-1">Planning preference only</span>{isArranging && <span className="text-primary">Updating layout…</span>}</div>
 
       <div className="mt-6 grid gap-4 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-6">
         <PlannerNumber label="Plot length" value={plannerPlotLength} onChange={setPlannerPlotLength} suffix={plotUnit} />
@@ -1069,6 +1127,73 @@ function PlannerSelect({ label, value, options, onChange }: { label: string; val
 
 function PlannerMetric({ label, value }: { label: string; value: string }) {
   return <div className="rounded-xl border border-border/70 bg-background/40 p-3"><div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div><div className="mt-1 font-mono text-sm font-semibold">{value}</div></div>
+}
+
+/* ============================================================================
+ *  WORKSPACE NAVIGATION
+ * ==========================================================================*/
+
+const workspaceModules = [
+  { label: "Dashboard", icon: LayoutDashboard },
+  { label: "House Planner", icon: Home },
+  { label: "Floor Plan", icon: Map },
+  { label: "Quantities", icon: ClipboardList },
+  { label: "BOQ", icon: FileSpreadsheet },
+  { label: "Settings", icon: Settings },
+]
+
+function Sidebar({
+  collapsed,
+  onToggle,
+  activeModule,
+  onNavigate,
+}: {
+  collapsed: boolean
+  onToggle: () => void
+  activeModule: string
+  onNavigate: (module: string) => void
+}) {
+  return (
+    <aside className={cn("desktop-sidebar fixed inset-y-0 left-0 z-40 hidden border-r border-border bg-card/95 pt-16 backdrop-blur-xl transition-[width] duration-300 lg:block", collapsed ? "w-[72px]" : "w-[220px]")}>
+      <div className="flex h-full flex-col px-3 py-5">
+        <div className="mb-4 flex items-center justify-between px-2">
+          {!collapsed && <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Workspace</span>}
+          <Button size="icon" variant="ghost" onClick={onToggle} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"} className="size-8">
+            <PanelTop className={cn("size-4 transition-transform", collapsed && "rotate-90")} />
+          </Button>
+        </div>
+        <nav className="flex flex-col gap-1" aria-label="Workspace navigation">
+          {workspaceModules.map(({ label, icon: Icon }) => {
+            const active = activeModule === label
+            return (
+              <button
+                key={label}
+                onClick={() => { onNavigate(label); if (label === "House Planner" || label === "Floor Plan") document.getElementById("house-planner")?.scrollIntoView({ behavior: "smooth" }) }}
+                className={cn("group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground", active && "bg-orange-500/10 font-medium text-orange-700 dark:text-orange-300")}
+                title={collapsed ? label : undefined}
+              >
+                {active && <span className="absolute left-0 h-5 w-0.5 rounded-full bg-primary" />}
+                <Icon className="size-4 shrink-0" />
+                {!collapsed && <span>{label}</span>}
+              </button>
+            )
+          })}
+        </nav>
+        <div className="mt-auto rounded-xl border border-border bg-muted/50 p-3">
+          {!collapsed ? <><div className="text-xs font-medium">Preliminary workspace</div><p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">Review every estimate with a licensed engineer before construction.</p></> : <ShieldCheck className="mx-auto size-4 text-emerald-600" />}
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+function MobileBottomNav({ activeModule, onNavigate }: { activeModule: string; onNavigate: (module: string) => void }) {
+  const items = workspaceModules.slice(0, 4).concat({ label: "Settings", icon: Settings })
+  return (
+    <nav className="mobile-bottom-nav fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 rounded-2xl border border-border bg-card/95 p-1 shadow-lg backdrop-blur-xl" aria-label="Mobile navigation">
+      {items.map(({ label, icon: Icon }) => <button key={label} onClick={() => { onNavigate(label); document.getElementById(label === "House Planner" || label === "Floor Plan" ? "house-planner" : "top")?.scrollIntoView({ behavior: "smooth" }) }} className={cn("flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl text-[10px] text-muted-foreground", activeModule === label && "bg-primary/10 text-primary")}><Icon className="size-4" /><span>{label === "House Planner" ? "Planner" : label === "Floor Plan" ? "Plan" : label}</span></button>)}
+    </nav>
+  )
 }
 
 /* ============================================================================
