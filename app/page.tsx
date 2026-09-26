@@ -2197,104 +2197,60 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
 function Footer() {
   const linkClass =
     "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-cyan-500/10 hover:text-cyan-700 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300"
+
   return (
     <footer className="border-t border-slate-200 bg-white/50 py-10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-8 md:grid-cols-[1.2fr_0.9fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <div className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950">
-                <Building2 className="h-4 w-4" strokeWidth={2.5} />
+              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950">
+                <Building2 className="size-4" strokeWidth={2.5} />
               </div>
               <span className="font-mono text-sm font-semibold">
                 BuildCalc <span className="neon-text">Pro</span>
               </span>
             </div>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              Production-grade residential construction estimator with an embedded IS Code reasoning engine for the
-              Indian market.
+            <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              AI-powered residential construction planning, estimation and design assistance.
             </p>
-            <div className="mt-4 flex items-center gap-2 text-xs text-cyan-700 dark:text-cyan-300">
-              <Sparkles className="h-3 w-3" />
-              <span className="font-mono uppercase tracking-[0.2em]">Created by Siddhu Pogula</span>
+            <div className="mt-5 flex items-center gap-2 text-xs text-cyan-700 dark:text-cyan-300">
+              <Sparkles className="size-3" />
+              <span className="font-mono uppercase tracking-[0.16em]">Created by Siddhu Pogula</span>
             </div>
           </div>
 
           <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Standards Referenced</div>
-            <ul className="mt-3 space-y-2 text-sm">
-              <li className="flex items-start gap-2">
-                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                IS 456 : 2000 — Plain &amp; Reinforced Concrete
-              </li>
-              <li className="flex items-start gap-2">
-                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                IS 875 (Part 3) : 2015 — Wind Loads
-              </li>
-              <li className="flex items-start gap-2">
-                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                IS 1893 (Part 1) : 2016 — Seismic Design
-              </li>
-              <li className="flex items-start gap-2">
-                <BookOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                IS 1904 / IS 4326 / NBC 2016
-              </li>
-            </ul>
+            <h2 className="text-sm font-semibold tracking-tight">Connect with Siddhu</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Siddhu Pogula Civil Engineering | Construction Technology | BuildCalc</p>
+            <nav aria-label="Siddhu Pogula social links" className="mt-4 flex flex-wrap gap-2">
+              <a href="https://github.com/P-Siddhu" target="_blank" rel="noopener noreferrer" className={linkClass} aria-label="GitHub — P-Siddhu">
+                <Github className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <span>GitHub</span>
+              </a>
+              <a href="https://www.linkedin.com/in/siddhu-pogula" target="_blank" rel="noopener noreferrer" className={linkClass} aria-label="LinkedIn — Siddhu Pogula">
+                <Linkedin className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <span>LinkedIn</span>
+              </a>
+              <a href="mailto:siddhupogula7@gmail.com" className={linkClass} aria-label="Email Siddhu Pogula">
+                <Mail className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <span>Email</span>
+              </a>
+            </nav>
           </div>
 
           <div>
-            <div className="text-xs uppercase tracking-wider text-muted-foreground">Connect</div>
-            <ul className="mt-3 space-y-1">
-              <li>
-                <a
-                  href="https://github.com/P-Siddhu"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={linkClass}
-                  aria-label="Siddhu Pogula on GitHub"
-                >
-                  <Github className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                  <span>github.com/P-Siddhu</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="https://www.linkedin.com/in/siddhu-pogula"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={linkClass}
-                  aria-label="Siddhu Pogula on LinkedIn"
-                >
-                  <Linkedin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                  <span>linkedin.com/in/siddhu-pogula</span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="mailto:siddhupogula7@gmail.com"
-                  className={linkClass}
-                  aria-label="Email Siddhu Pogula"
-                >
-                  <Mail className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-                  <span>siddhupogula7@gmail.com</span>
-                </a>
-              </li>
-            </ul>
-
-            <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-3 text-[11px] leading-relaxed text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/[0.04] dark:text-amber-200/90">
-              <strong className="text-amber-700 dark:text-amber-200">Disclaimer:</strong> Estimates are indicative,
-              derived from residential thumb-rules. Final structural design must be certified by a licensed
-              structural engineer before construction.
-            </div>
+            <h2 className="text-sm font-semibold tracking-tight">Safety-first estimation</h2>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              Built with educational guidance rooted in IS 456, IS 875 and IS 1893. Final structural design must be certified by a licensed engineer.
+            </p>
           </div>
         </div>
 
         <div className="hairline mt-10" />
         <div className="mt-6 flex flex-col items-center justify-between gap-3 text-xs text-muted-foreground sm:flex-row">
-          <span className="text-center sm:text-left">
-            © {new Date().getFullYear()} BuildCalc Pro · Created by Siddhu Pogula · All rights reserved.
-          </span>
-          <span className="font-mono">v1.0 · IS-Code Engine 2026</span>
+          <span className="text-center sm:text-left">© 2026 Siddhu Pogula. All rights reserved.</span>
+          <span className="font-mono">BuildCalc Pro · IS-Code Engine</span>
         </div>
       </div>
     </footer>
