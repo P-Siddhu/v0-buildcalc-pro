@@ -58,7 +58,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body suppressHydrationWarning className="font-sans antialiased bg-background text-foreground">
         {children}
         {process.env.NODE_ENV === "production" && <Analytics />}
       </body>
