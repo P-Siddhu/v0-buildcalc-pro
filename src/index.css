@@ -1,0 +1,185 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------- Colour tokens (60% neutral canvas / 30% surfaces + type / 10% accent) ---------- */
+:root {
+  --c-canvas: 244 246 248;
+  --c-surface: 255 255 255;
+  --c-sunken: 235 239 243;
+  --c-line: 213 220 227;
+  --c-ink: 15 27 45;
+  --c-muted: 81 96 111;
+  --c-accent: 11 122 110;
+  --c-accent-soft: 221 242 238;
+  --c-accent-ink: 7 90 81;
+  --c-on-accent: 255 255 255;
+  --c-warn: 138 79 0;
+  --c-warn-soft: 255 243 214;
+  --c-danger: 180 35 24;
+  --c-danger-soft: 253 236 234;
+}
+.dark {
+  --c-canvas: 12 18 25;
+  --c-surface: 19 28 38;
+  --c-sunken: 15 23 32;
+  --c-line: 38 50 63;
+  --c-ink: 232 238 244;
+  --c-muted: 154 169 184;
+  --c-accent: 63 198 176;
+  --c-accent-soft: 15 52 50;
+  --c-accent-ink: 130 226 208;
+  --c-on-accent: 6 32 28;
+  --c-warn: 245 190 90;
+  --c-warn-soft: 58 42 14;
+  --c-danger: 255 140 130;
+  --c-danger-soft: 62 24 22;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-canvas font-sans text-ink antialiased;
+    background-image: radial-gradient(circle at 50% -10%, rgb(var(--c-accent) / 0.08), transparent 34rem);
+  }
+  h1, h2, h3 {
+    @apply font-serif text-ink;
+    text-wrap: balance;
+  }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: rgb(var(--c-canvas)); }
+  ::-webkit-scrollbar-thumb { background: rgb(var(--c-line)); border: 3px solid rgb(var(--c-canvas)); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgb(var(--c-muted) / 0.7); }
+  :focus-visible {
+    outline: 3px solid rgb(var(--c-accent));
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: rgb(var(--c-accent) / 0.25);
+  }
+}
+
+@layer components {
+  .wrap {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Buttons — 44px minimum touch target */
+  .btn {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-field px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-accent text-on-accent hover:bg-accent-ink;
+  }
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink hover:bg-sunken;
+  }
+  .btn-ghost {
+    @apply text-ink hover:bg-sunken;
+  }
+
+  /* Form controls — 16px text avoids iOS zoom-on-focus */
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .input {
+    @apply min-h-[44px] w-full rounded-field border border-line bg-surface px-3 py-2.5 text-base text-ink placeholder:text-muted/60 focus:border-accent;
+  }
+  .input-error {
+    @apply border-danger;
+  }
+  .hint {
+    @apply text-sm text-muted;
+  }
+
+  .card {
+    @apply rounded-card border border-line bg-surface shadow-sm transition-shadow duration-200;
+  }
+  .card:hover {
+    @apply shadow-md;
+  }
+  .chip {
+    @apply inline-flex min-h-[40px] items-center rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm font-medium text-ink transition-colors hover:bg-sunken;
+  }
+  .chip[aria-pressed='true'], .chip[aria-checked='true'] {
+    @apply border-accent bg-accent-soft text-accent-ink;
+  }
+
+  /* The "slip": results laid out like a printed statement, with dotted leaders */
+  .slip {
+    @apply rounded-slip border border-line bg-surface;
+  }
+  .slip-head {
+    @apply rounded-t-slip border-b border-line bg-sunken px-4 py-2.5 font-sans text-sm font-semibold text-ink;
+  }
+  .slip-row {
+    @apply flex items-baseline gap-3 px-4 py-2.5;
+  }
+  .slip-row + .slip-row {
+    border-top: 1px dashed rgb(var(--c-line));
+  }
+  .slip-row dt {
+    @apply flex flex-1 items-baseline gap-2 text-sm text-muted;
+  }
+  .slip-row dt::after {
+    content: '';
+    flex: 1 1 auto;
+    min-width: 1rem;
+    border-bottom: 1px dotted rgb(var(--c-muted) / 0.5);
+    transform: translateY(-0.3em);
+  }
+  .slip-row dd {
+    @apply text-right font-medium tabular-nums text-ink;
+  }
+
+  /* Long-form explanatory text */
+  .prose-ec {
+    @apply max-w-[68ch] text-base leading-7 text-ink;
+  }
+  .prose-ec h2 {
+    @apply mb-3 mt-10 text-2xl font-semibold leading-tight;
+  }
+  .prose-ec h3 {
+    @apply mb-2 mt-6 text-lg font-semibold;
+  }
+  .prose-ec p {
+    @apply my-3;
+  }
+  .prose-ec ul {
+    @apply my-3 list-disc space-y-1.5 pl-6;
+  }
+  .prose-ec ol {
+    @apply my-3 list-decimal space-y-1.5 pl-6;
+  }
+  .prose-ec a {
+    @apply font-medium text-accent underline underline-offset-2 hover:text-accent-ink;
+  }
+  .prose-ec strong {
+    @apply font-semibold;
+  }
+  .formula {
+    @apply my-4 rounded-slip border border-line border-l-4 border-l-accent bg-sunken px-4 py-3 text-[0.95rem] leading-7;
+  }
+
+  .ec-pop {
+    animation: ec-pop 0.18s ease-out;
+  }
+}
+
+@keyframes ec-pop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
