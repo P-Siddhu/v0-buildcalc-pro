@@ -683,6 +683,7 @@ export default function Page() {
   const [theme, , toggleTheme] = useTheme()
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
   const [activeModule, setActiveModule] = React.useState("Dashboard")
+  const [plannerSnapshot, setPlannerSnapshot] = React.useState<PlannerSnapshot | null>(null)
 
   React.useEffect(() => {
     const updateProgress = () => {
@@ -756,6 +757,90 @@ export default function Page() {
       headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
       styles: { fontSize: 9 },
     })
+
+    // House plan: include a compact visual floor plan and room schedule.
+    if (plannerSnapshot) {
+      const planW = doc.internal.pageSize.getWidth()
+      const planH = doc.internal.pageSize.getHeight()
+      doc.addPage()
+      doc.setFillColor(2, 6, 23)
+      doc.rect(0, 0, planW, 70, "F")
+      doc.setTextColor(34, 211, 238)
+      doc.setFont("helvetica", "bold")
+      doc.setFontSize(18)
+      doc.text("House Plan", 40, 34)
+      doc.setTextColor(226, 232, 240)
+      doc.setFont("helvetica", "normal")
+      doc.setFontSize(9)
+      doc.text(
+        `${plannerSnapshot.plotLength} × ${plannerSnapshot.plotWidth} ${plannerSnapshot.plotUnit} · ${plannerSnapshot.plotOrientation} facing · ${plannerSnapshot.floors}`,
+        40,
+        52,
+      )
+
+      let cursorY = 98
+      ;(["ground", "first", "second"] as PlannerFloor[]).forEach((floorName) => {
+        const floorRooms = plannerSnapshot.roomsByFloor[floorName]
+        if (!floorRooms.length) return
+        if (cursorY > planH - 260) {
+          doc.addPage()
+          cursorY = 55
+        }
+        doc.setTextColor(15, 23, 42)
+        doc.setFont("helvetica", "bold")
+        doc.setFontSize(12)
+        doc.text(`${floorName.toUpperCase()} FLOOR`, 40, cursorY)
+
+        const canvasX = 40
+        const canvasY = cursorY + 14
+        const canvasW = Math.min(planW - 80, 330)
+        const canvasH = 210
+        doc.setFillColor(241, 245, 249)
+        doc.setDrawColor(14, 165, 233)
+        doc.rect(canvasX, canvasY, canvasW, canvasH, "FD")
+        doc.setFontSize(7)
+        doc.setTextColor(71, 85, 105)
+        doc.text(`North ↑   Setback envelope · ${plannerSnapshot.plotOrientation} facing`, canvasX + 8, canvasY + 12)
+
+        floorRooms.forEach((room, index) => {
+          const roomX = canvasX + 10 + (room.x / 100) * (canvasW - 35)
+          const roomY = canvasY + 24 + (room.y / 70) * (canvasH - 35)
+          const roomW = Math.max(42, Math.min(105, (room.length / Math.max(plannerSnapshot.plotLength, 1)) * (canvasW - 35)))
+          const roomH = Math.max(28, Math.min(62, (room.width / Math.max(plannerSnapshot.plotWidth, 1)) * (canvasH - 35)))
+          doc.setFillColor(index % 2 === 0 ? 8 : 14, index % 2 === 2 ? 145 : 116, 180)
+          doc.setDrawColor(8, 145, 178)
+          doc.rect(roomX, roomY, roomW, roomH, "FD")
+          doc.setTextColor(255, 255, 255)
+          doc.setFontSize(7)
+          doc.text(room.name.slice(0, 18), roomX + roomW / 2, roomY + roomH / 2 - 2, { align: "center" })
+          doc.setFontSize(6)
+          doc.text(`${Math.round(roomArea(room))} sqft`, roomX + roomW / 2, roomY + roomH / 2 + 8, { align: "center" })
+        })
+
+        autoTable(doc, {
+          startY: canvasY + canvasH + 16,
+          head: [["Room", "Dimensions", "Area", "Doors", "Windows", "Notes"]],
+          body: floorRooms.map((room) => [
+            room.name,
+            `${room.length} × ${room.width} ${room.unit}`,
+            `${fmtNum(roomArea(room))} sqft`,
+            String(room.door),
+            String(room.windows),
+            room.notes || "—",
+          ]),
+          theme: "grid",
+          headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255] },
+          styles: { fontSize: 7, cellPadding: 4 },
+        })
+        // Keep the next floor below the current schedule when possible.
+        cursorY = (((doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY) ?? canvasY + canvasH + 100) + 26
+      })
+
+      doc.setTextColor(100, 116, 139)
+      doc.setFont("helvetica", "italic")
+      doc.setFontSize(8)
+      doc.text("Preliminary planning diagram — not a construction drawing.", 40, planH - 42)
+    }
 
     // Materials
     autoTable(doc, {
@@ -853,12 +938,13 @@ export default function Page() {
             onReset={() => dispatch({ type: "RESET" })}
           />
 
-          <HousePlanner
-            plotLength={inputs.plotLength}
-            plotWidth={inputs.plotWidth}
-            builtUpArea={inputs.builtUpArea}
-            onBuiltUpAreaChange={(area) => set("builtUpArea", area)}
-          />
+  <HousePlanner
+  plotLength={inputs.plotLength}
+  plotWidth={inputs.plotWidth}
+  builtUpArea={inputs.builtUpArea}
+  onBuiltUpAreaChange={(area) => set("builtUpArea", area)}
+  onSnapshotChange={setPlannerSnapshot}
+  />
 
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-5">
             {/* INPUT COLUMN */}
@@ -903,6 +989,16 @@ type PlannerRoom = {
 
 type PlannerFloor = "ground" | "first" | "second"
 
+type PlannerSnapshot = {
+  plotLength: number
+  plotWidth: number
+  plotUnit: "ft" | "m"
+  plotOrientation: string
+  floors: string
+  setbacks: { front: number; rear: number; left: number; right: number }
+  roomsByFloor: Record<PlannerFloor, PlannerRoom[]>
+}
+
 const ROOM_PRESETS = [
   "Living / Hall", "Master Bedroom", "Bedroom", "Kitchen", "Dining", "Bathroom", "Toilet",
   "Pooja Room", "Utility", "Store Room", "Balcony", "Staircase", "Parking", "Custom Room",
@@ -925,11 +1021,13 @@ function HousePlanner({
   plotWidth,
   builtUpArea,
   onBuiltUpAreaChange,
+  onSnapshotChange,
 }: {
   plotLength: number
   plotWidth: number
   builtUpArea: number
   onBuiltUpAreaChange: (area: number) => void
+  onSnapshotChange: (snapshot: PlannerSnapshot) => void
 }) {
   const [floor, setFloor] = React.useState<PlannerFloor>("ground")
   const [plannerPlotLength, setPlannerPlotLength] = React.useState(plotLength)
@@ -959,8 +1057,20 @@ function HousePlanner({
   const remainingPlot = Math.max(0, plotArea - totalRoomArea)
 
   React.useEffect(() => {
+    onSnapshotChange({
+      plotLength: plannerPlotLength,
+      plotWidth: plannerPlotWidth,
+      plotUnit,
+      plotOrientation,
+      floors,
+      setbacks,
+      roomsByFloor,
+    })
+  }, [plannerPlotLength, plannerPlotWidth, plotUnit, plotOrientation, floors, setbacks, roomsByFloor, onSnapshotChange])
+
+  React.useEffect(() => {
     if (totalBuiltUp > 0 && Math.round(totalBuiltUp) !== Math.round(builtUpArea)) onBuiltUpAreaChange(Math.round(totalBuiltUp))
-  }, [totalBuiltUp, builtUpArea])
+  }, [totalBuiltUp, builtUpArea, onBuiltUpAreaChange])
 
   const updateRooms = (next: PlannerRoom[], record = true) => {
     if (record) {
