@@ -928,7 +928,7 @@ export default function Page() {
           isCompliant={isCompliant}
         />
 
-        <main className="app-workspace mx-auto max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
+        <main className="app-workspace mx-auto w-full min-w-0 px-3 pb-20 pt-24 sm:px-5 lg:px-7 xl:px-8">
           <Hero
             estimate={estimate}
             isCompliant={isCompliant}
@@ -946,7 +946,7 @@ export default function Page() {
   onSnapshotChange={setPlannerSnapshot}
   />
 
-          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-5">
             {/* INPUT COLUMN */}
             <div className="lg:col-span-3">
               <InputPanel inputs={inputs} unit={unit} set={set} findings={findings} />
@@ -1168,7 +1168,7 @@ function HousePlanner({
   ]
 
   return (
-    <section className="mt-10 rounded-3xl glass p-4 sm:p-6" id="house-planner">
+    <section className="mt-8 min-w-0 rounded-3xl glass p-3 sm:p-5 lg:p-6" id="house-planner">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex items-center gap-2 text-primary"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
@@ -1197,9 +1197,9 @@ function HousePlanner({
         <div className="ml-auto flex items-center gap-1"><Button size="icon" variant="ghost" onClick={undo} disabled={!history.length} aria-label="Undo"><Undo2 /></Button><Button size="icon" variant="ghost" onClick={redo} disabled={!future.length} aria-label="Redo"><Redo2 /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.min(1.8, value + 0.15))} aria-label="Zoom in"><ZoomIn /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.max(0.65, value - 0.15))} aria-label="Zoom out"><ZoomOut /></Button><Button size="icon" variant="ghost" onClick={() => setZoom(1)} aria-label="Reset zoom"><RotateCcw /></Button></div>
       </div>
 
-      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
-          <svg viewBox="0 0 100 70" className="h-[420px] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
+      <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)] 2xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] xl:items-start">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
+          <svg viewBox="0 0 100 70" className="h-[clamp(320px,38vw,520px)] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
             <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
             <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-cyan-600 dark:text-cyan-400" />
@@ -1210,14 +1210,14 @@ function HousePlanner({
           </svg>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
-          <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-cyan-400/60 bg-cyan-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" /></button>)}</div>
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
+          <div className="flex max-h-64 min-w-0 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-cyan-400/60 bg-cyan-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" /></button>)}</div>
           {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-cyan-500/10 p-2 text-xs text-cyan-800 dark:text-cyan-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
       <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">1 Project setup</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">2 Rooms</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
     </section>
   )
