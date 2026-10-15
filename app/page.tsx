@@ -946,13 +946,13 @@ export default function Page() {
   onSnapshotChange={setPlannerSnapshot}
   />
 
-          <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-5">
+          <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(300px,2fr)]">
             {/* INPUT COLUMN */}
-            <div className="lg:col-span-3">
+            <div className="min-w-0">
               <InputPanel inputs={inputs} unit={unit} set={set} findings={findings} />
             </div>
             {/* RESULTS COLUMN */}
-            <div className="lg:col-span-2">
+            <div className="min-w-0">
               <ResultsPanel estimate={estimate} findings={findings} onExport={handleExportPDF} />
             </div>
           </div>
@@ -1169,13 +1169,13 @@ function HousePlanner({
 
   return (
     <section className="mt-8 min-w-0 rounded-3xl glass p-3 sm:p-5 lg:p-6" id="house-planner">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 text-primary"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight">Plan rooms. See quantities. Estimate with confidence.</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">A preliminary architectural planning surface. Generated layouts are not construction drawings and require professional review.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 lg:max-w-[430px] lg:justify-end">
           <Button size="sm" variant="outline" onClick={autoArrange} disabled={isArranging}><WandSparkles data-icon="inline-start" /> Auto arrange</Button>
           <Button size="sm" variant="outline" onClick={optimizeLayout} disabled={isArranging}><Sparkles data-icon="inline-start" /> Optimize</Button>
           <Button size="sm" variant={vastuMode ? "default" : "outline"} onClick={() => setVastuMode((value) => !value)}><Eye data-icon="inline-start" /> Vastu {vastuMode ? "on" : "off"}</Button>
@@ -1183,7 +1183,7 @@ function HousePlanner({
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom <span className="rounded-full bg-muted px-2 py-1">Planning preference only</span>{isArranging && <span className="text-primary">Updating layout…</span>}</div>
 
-      <div className="mt-6 grid gap-4 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="mt-6 grid min-w-0 gap-3 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-[repeat(6,minmax(0,1fr))]">
         <PlannerNumber label="Plot length" value={plannerPlotLength} onChange={setPlannerPlotLength} suffix={plotUnit} />
         <PlannerNumber label="Plot width" value={plannerPlotWidth} onChange={setPlannerPlotWidth} suffix={plotUnit} />
         <PlannerSelect label="Plot unit" value={plotUnit} options={["ft", "m"]} onChange={(v) => setPlotUnit(v as "ft" | "m")} />
@@ -2152,7 +2152,7 @@ function ResultsPanel({
       {/* CHART */}
       <div className="rounded-3xl glass p-5">
         <h4 className="text-sm font-semibold tracking-tight">Cost Composition</h4>
-<div className="mt-3 h-56 min-h-56 min-w-0">
+<div className="mt-3 h-56 min-w-0">
             <ResponsiveContainer width="100%" height={224} minWidth={1} minHeight={1}>
             <PieChart>
               <Pie
@@ -2310,7 +2310,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
           <Sparkles className="h-5 w-5 text-cyan-300" />
         </div>
 
-        <div className="mt-5 h-72 min-h-72 min-w-0">
+        <div className="mt-5 h-72 min-w-0">
           <ResponsiveContainer width="100%" height={288} minWidth={1} minHeight={1}>
             <BarChart data={barData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />

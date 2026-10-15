@@ -169,7 +169,7 @@ input[type='number'] { -moz-appearance: textfield; }
   .desktop-sidebar { display: none; }
 }
 @media (min-width: 1024px) {
-  .app-workspace { width: calc(100% - 220px); margin-left: 220px; }
+  .app-workspace { box-sizing: border-box; width: calc(100% - 220px); max-width: calc(100% - 220px); min-width: 0; margin-left: 220px; overflow-x: clip; }
 }
 @media (max-width: 640px) {
   .app-workspace { padding-bottom: 5.5rem; }
