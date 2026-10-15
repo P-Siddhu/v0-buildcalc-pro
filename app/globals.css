@@ -4,74 +4,74 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #f97316;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #fff7ed;
-  --accent-foreground: #c2410c;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #f97316;
-  --chart-1: #f97316;
-  --chart-2: #0f172a;
-  --chart-3: #64748b;
-  --chart-4: #16a34a;
-  --chart-5: #f59e0b;
+  --background: #FAF9F6;
+  --foreground: #172033;
+  --card: #FFFFFF;
+  --card-foreground: #172033;
+  --popover: #FFFFFF;
+  --popover-foreground: #172033;
+  --primary: #A9542D;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1EEE8;
+  --secondary-foreground: #172033;
+  --muted: #F1EEE8;
+  --muted-foreground: #5C6675;
+  --accent: #F1EEE8;
+  --accent-foreground: #874225;
+  --destructive: #A9542D;
+  --destructive-foreground: #FFFFFF;
+  --border: #DEDAD2;
+  --input: #DEDAD2;
+  --ring: #A9542D;
+  --chart-1: #A9542D;
+  --chart-2: #087E9B;
+  --chart-3: #5C6675;
+  --chart-4: #16A34A;
+  --chart-5: #A16207;
   --radius: 0.75rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #f97316;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff7ed;
-  --sidebar-accent-foreground: #c2410c;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #f97316;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #172033;
+  --sidebar-primary: #A9542D;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F1EEE8;
+  --sidebar-accent-foreground: #874225;
+  --sidebar-border: #DEDAD2;
+  --sidebar-ring: #A9542D;
 }
 
 .dark {
-  --background: #0b1120;
-  --foreground: #f8fafc;
-  --card: #111827;
-  --card-foreground: #f8fafc;
-  --popover: #111827;
-  --popover-foreground: #f8fafc;
-  --primary: #f97316;
-  --primary-foreground: #ffffff;
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #3b1b0b;
-  --accent-foreground: #fdba74;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #243247;
-  --input: #243247;
-  --ring: #f97316;
-  --chart-1: #f97316;
-  --chart-2: #f8fafc;
-  --chart-3: #94a3b8;
-  --chart-4: #22c55e;
-  --chart-5: #fbbf24;
-  --sidebar: #111827;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #f97316;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #3b1b0b;
-  --sidebar-accent-foreground: #fdba74;
-  --sidebar-border: #243247;
-  --sidebar-ring: #f97316;
+  --background: #080B12;
+  --foreground: #F5F7FA;
+  --card: #0B0F17;
+  --card-foreground: #F5F7FA;
+  --popover: #101722;
+  --popover-foreground: #F5F7FA;
+  --primary: #C8754D;
+  --primary-foreground: #FFFFFF;
+  --secondary: #101722;
+  --secondary-foreground: #F5F7FA;
+  --muted: #101722;
+  --muted-foreground: #AAB4C2;
+  --accent: #101722;
+  --accent-foreground: #D88B63;
+  --destructive: #D88B63;
+  --destructive-foreground: #FFFFFF;
+  --border: #273244;
+  --input: #273244;
+  --ring: #D88B63;
+  --chart-1: #C8754D;
+  --chart-2: #42C8E8;
+  --chart-3: #AAB4C2;
+  --chart-4: #4ADE80;
+  --chart-5: #FACC15;
+  --sidebar: #0B0F17;
+  --sidebar-foreground: #F5F7FA;
+  --sidebar-primary: #C8754D;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #101722;
+  --sidebar-accent-foreground: #D88B63;
+  --sidebar-border: #273244;
+  --sidebar-ring: #D88B63;
 }
 
 @theme inline {
@@ -120,8 +120,8 @@
   html, body { @apply bg-background text-foreground; }
   body { min-width: 320px; }
   html { scroll-behavior: smooth; }
-  ::selection { background: #fed7aa; color: #7c2d12; }
-  .dark ::selection { background: #9a3412; color: #fff7ed; }
+  ::selection { background: #FECACA; color: #7F1D1D; }
+  .dark ::selection { background: #7F1D1D; color: #FFFFFF; }
 }
 
 @utility glass {
@@ -131,15 +131,15 @@
   @apply border border-border bg-card;
 }
 @utility neon-glow {
-  box-shadow: 0 6px 20px -10px rgb(249 115 22 / 0.7);
+  box-shadow: 0 8px 24px -14px rgb(200 117 77 / 0.55);
 }
 @utility neon-text {
-  color: #ea580c;
+  color: var(--primary);
 }
-.dark .neon-text { color: #fb923c; }
+.dark .neon-text { color: #F87171; }
 @utility neon-border {
-  border-color: rgb(249 115 22 / 0.55);
-  box-shadow: inset 0 0 0 1px rgb(249 115 22 / 0.08);
+  border-color: color-mix(in srgb, var(--primary) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 10%, transparent);
 }
 @utility hairline {
   height: 1px;
@@ -159,8 +159,8 @@ button:active { transform: scale(.98); }
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-.dark ::-webkit-scrollbar-thumb { background: #334155; }
+::-webkit-scrollbar-thumb { background: #A3A3A3; border-radius: 8px; }
+.dark ::-webkit-scrollbar-thumb { background: #525252; }
 input[type='number']::-webkit-outer-spin-button, input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type='number'] { -moz-appearance: textfield; }
 @media print { body { background: white; color: black; } }
@@ -169,7 +169,7 @@ input[type='number'] { -moz-appearance: textfield; }
   .desktop-sidebar { display: none; }
 }
 @media (min-width: 1024px) {
-  .app-workspace { margin-left: 220px; }
+  .app-workspace { box-sizing: border-box; width: calc(100% - 220px); max-width: calc(100% - 220px); min-width: 0; margin-left: 220px; overflow-x: clip; }
 }
 @media (max-width: 640px) {
   .app-workspace { padding-bottom: 5.5rem; }
@@ -180,7 +180,7 @@ input[type='number'] { -moz-appearance: textfield; }
   .mobile-bottom-nav { display: grid; }
 }
 
-:focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 /* floor plan remains legible in either theme */
 .floor-plan-canvas { background: #ffffff; color: #0f172a; }
@@ -189,7 +189,7 @@ input[type='number'] { -moz-appearance: textfield; }
 .dark .tone-muted { color: #94a3b8; }
 
 /* scroll progress */
-.scroll-progress { position: fixed; top: 0; left: 0; z-index: 70; height: 2px; width: var(--scroll-progress, 0%); background: #f97316; }
+.scroll-progress { position: fixed; top: 0; left: 0; z-index: 70; height: 2px; width: var(--scroll-progress, 0%); background: var(--primary); }
 
 @media (max-width: 480px) {
   .planner-canvas-height { height: 320px !important; }
@@ -213,13 +213,13 @@ input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; marg
 input[type='number'] { -moz-appearance: textfield; }
 
 /* legacy class compatibility */
-.dark .bg-slate-950\/60 { background-color: rgb(11 17 32 / .86); }
-.dark .bg-slate-950\/40 { background-color: rgb(11 17 32 / .72); }
+.dark .bg-slate-950\/60 { background-color: #0B0F17; }
+.dark .bg-slate-950\/40 { background-color: #0B0F17; }
 .dark .bg-white\/\[0\.03\] { background-color: rgb(255 255 255 / .03); }
 .dark .bg-white\/\[0\.06\] { background-color: rgb(255 255 255 / .06); }
 .dark .border-white\/10 { border-color: rgb(148 163 184 / .18); }
-.dark .text-cyan-300, .dark .text-cyan-200 { color: #fb923c; }
-.dark .bg-cyan-400 { background-color: #f97316; }
+.dark .text-cyan-300, .dark .text-cyan-200 { color: #42C8E8; }
+.dark .bg-cyan-400 { background-color: #C8754D; }
 .dark .text-slate-950 { color: #fff; }
 .dark .bg-rose-500\/\[0\.06\] { background-color: rgb(220 38 38 / .08); }
 .dark .text-rose-200, .dark .text-rose-300 { color: #fca5a5; }
@@ -240,7 +240,7 @@ input[type='number'] { -moz-appearance: textfield; }
 .dark .text-cyan-600 { color: #fb923c; }
 .dark .border-cyan-400\/20 { border-color: rgb(249 115 22 / .25); }
 .dark .bg-slate-100\/80 { background-color: #f8fafc; }
-.dark .text-slate-600, .dark .text-slate-500 { color: #64748b; }
+.dark .text-slate-600, .dark .text-slate-500 { color: #AAB4C2; }
 .dark .bg-slate-950\/70 { background-color: #f8fafc; }
 .dark .border-slate-200 { border-color: #243247; }
 .dark .bg-white\/60, .dark .bg-white\/70 { background-color: #111827; }

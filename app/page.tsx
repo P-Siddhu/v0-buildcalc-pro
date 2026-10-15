@@ -34,8 +34,6 @@ import {
   Sun,
   Moon,
   Settings2,
-  Smartphone,
-  Monitor,
   Home,
   Plus,
   Trash2,
@@ -60,8 +58,6 @@ import {
   Eye,
 } from "lucide-react"
 import {
-  PieChart,
-  Pie,
   Cell,
   ResponsiveContainer,
   Tooltip as RTooltip,
@@ -638,7 +634,7 @@ const fmtNum = (n: number) => new Intl.NumberFormat("en-IN").format(Math.round(n
 const sqftToM2 = (n: number) => n * 0.092903
 const ftToM = (n: number) => n * 0.3048
 
-const CHART_COLORS = ["#22d3ee", "#38bdf8", "#0ea5e9", "#06b6d4", "#67e8f9", "#7dd3fc", "#a5f3fc", "#bae6fd"]
+  const CHART_COLORS = ["#A9542D", "#C8754D", "#874225", "#D88B63", "#A9542D", "#C8754D", "#087E9B", "#42C8E8"]
 
 /* ============================================================================
  *  THEME HOOK — light / dark with localStorage persistence
@@ -919,16 +915,14 @@ export default function Page() {
         />
         <Navbar
           unit={unit}
-          orientation={orientation}
-          theme={theme}
-          onUnit={(u) => dispatch({ type: "SET_UNIT", unit: u })}
-          onOrientation={(o) => dispatch({ type: "SET_ORIENTATION", orientation: o })}
+  theme={theme}
+  onUnit={(u) => dispatch({ type: "SET_UNIT", unit: u })}
           onToggleTheme={toggleTheme}
           onExport={handleExportPDF}
           isCompliant={isCompliant}
         />
 
-        <main className="app-workspace mx-auto max-w-7xl px-4 pb-24 pt-28 sm:px-6 lg:px-8">
+        <main className="app-workspace mx-auto w-full min-w-0 px-3 pb-20 pt-24 sm:px-5 lg:px-7 xl:px-8">
           <Hero
             estimate={estimate}
             isCompliant={isCompliant}
@@ -946,13 +940,13 @@ export default function Page() {
   onSnapshotChange={setPlannerSnapshot}
   />
 
-          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(300px,2fr)]">
             {/* INPUT COLUMN */}
-            <div className="lg:col-span-3">
+            <div className="min-w-0">
               <InputPanel inputs={inputs} unit={unit} set={set} findings={findings} />
             </div>
             {/* RESULTS COLUMN */}
-            <div className="lg:col-span-2">
+            <div className="min-w-0">
               <ResultsPanel estimate={estimate} findings={findings} onExport={handleExportPDF} />
             </div>
           </div>
@@ -1168,14 +1162,14 @@ function HousePlanner({
   ]
 
   return (
-    <section className="mt-10 rounded-3xl glass p-4 sm:p-6" id="house-planner">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
+    <section className="mt-8 min-w-0 rounded-3xl glass p-3 sm:p-5 lg:p-6" id="house-planner">
+      <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 text-primary"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight">Plan rooms. See quantities. Estimate with confidence.</h2>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">A preliminary architectural planning surface. Generated layouts are not construction drawings and require professional review.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2 lg:max-w-[430px] lg:justify-end">
           <Button size="sm" variant="outline" onClick={autoArrange} disabled={isArranging}><WandSparkles data-icon="inline-start" /> Auto arrange</Button>
           <Button size="sm" variant="outline" onClick={optimizeLayout} disabled={isArranging}><Sparkles data-icon="inline-start" /> Optimize</Button>
           <Button size="sm" variant={vastuMode ? "default" : "outline"} onClick={() => setVastuMode((value) => !value)}><Eye data-icon="inline-start" /> Vastu {vastuMode ? "on" : "off"}</Button>
@@ -1183,7 +1177,7 @@ function HousePlanner({
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom <span className="rounded-full bg-muted px-2 py-1">Planning preference only</span>{isArranging && <span className="text-primary">Updating layout…</span>}</div>
 
-      <div className="mt-6 grid gap-4 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-6">
+      <div className="mt-6 grid min-w-0 gap-3 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-[repeat(6,minmax(0,1fr))]">
         <PlannerNumber label="Plot length" value={plannerPlotLength} onChange={setPlannerPlotLength} suffix={plotUnit} />
         <PlannerNumber label="Plot width" value={plannerPlotWidth} onChange={setPlannerPlotWidth} suffix={plotUnit} />
         <PlannerSelect label="Plot unit" value={plotUnit} options={["ft", "m"]} onChange={(v) => setPlotUnit(v as "ft" | "m")} />
@@ -1197,28 +1191,28 @@ function HousePlanner({
         <div className="ml-auto flex items-center gap-1"><Button size="icon" variant="ghost" onClick={undo} disabled={!history.length} aria-label="Undo"><Undo2 /></Button><Button size="icon" variant="ghost" onClick={redo} disabled={!future.length} aria-label="Redo"><Redo2 /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.min(1.8, value + 0.15))} aria-label="Zoom in"><ZoomIn /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.max(0.65, value - 0.15))} aria-label="Zoom out"><ZoomOut /></Button><Button size="icon" variant="ghost" onClick={() => setZoom(1)} aria-label="Reset zoom"><RotateCcw /></Button></div>
       </div>
 
-      <div className="mt-4 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <div className="overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
-          <svg viewBox="0 0 100 70" className="h-[420px] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
+      <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)] 2xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] xl:items-start">
+        <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
+          <svg viewBox="0 0 100 70" className="h-[clamp(320px,38vw,520px)] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
             <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
-            <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-cyan-600 dark:text-cyan-400" />
+            <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-red-600 dark:text-red-400" />
             <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-amber-500" />
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
             <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
-            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#0891b2" : "#334155"} fillOpacity="0.88" stroke={active ? "#67e8f9" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#67e8f9" strokeWidth="1" />}</g> })}
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#B91C1C" : "#262626"} fillOpacity="0.88" stroke={active ? "#F87171" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
           </svg>
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
-          <div className="flex max-h-64 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-cyan-400/60 bg-cyan-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" /></button>)}</div>
-          {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-cyan-500/10 p-2 text-xs text-cyan-800 dark:text-cyan-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
+          <div className="flex max-h-64 min-w-0 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-red-400/60 bg-red-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-red-600 dark:text-red-400" /></button>)}</div>
+          {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-orange-500/10 p-2 text-xs text-red-800 dark:text-red-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
         </div>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">1 Project setup</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">2 Rooms</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">1 Project setup</span><span>→</span><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">2 Rooms</span><span>→</span><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
     </section>
   )
 }
@@ -1312,25 +1306,21 @@ function MobileBottomNav({ activeModule, onNavigate }: { activeModule: string; o
 
 function Navbar({
   unit,
-  orientation,
   theme,
   onUnit,
-  onOrientation,
   onToggleTheme,
   onExport,
   isCompliant,
 }: {
   unit: Unit
-  orientation: Orientation
   theme: Theme
   onUnit: (u: Unit) => void
-  onOrientation: (o: Orientation) => void
   onToggleTheme: () => void
   onExport: () => void
   isCompliant: boolean
 }) {
   const segBase = "rounded-full px-3 py-1 text-xs font-medium transition"
-  const segActive = "bg-cyan-500/15 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-300"
+  const segActive = "bg-red-500/15 text-orange-700 dark:bg-red-400/15 dark:text-orange-300"
   const segInactive = "text-muted-foreground hover:text-foreground"
 
   return (
@@ -1338,7 +1328,7 @@ function Navbar({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
         {/* BRAND */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950 neon-glow">
+          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-800 text-slate-950 neon-glow">
             <Building2 className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div className="flex min-w-0 flex-col leading-tight">
@@ -1360,24 +1350,6 @@ function Navbar({
             </button>
             <button onClick={() => onUnit("m2")} className={cn(segBase, unit === "m2" ? segActive : segInactive)}>
               m²
-            </button>
-          </div>
-
-          {/* Orientation toggle — lg+ */}
-          <div className="hidden items-center gap-1 rounded-full border border-slate-200 bg-white/60 p-1 dark:border-white/10 dark:bg-white/[0.03] lg:flex">
-            <button
-              onClick={() => onOrientation("portrait")}
-              className={cn(segBase, orientation === "portrait" ? segActive : segInactive)}
-            >
-              <Smartphone className="mr-1 inline h-3 w-3" />
-              Portrait
-            </button>
-            <button
-              onClick={() => onOrientation("landscape")}
-              className={cn(segBase, orientation === "landscape" ? segActive : segInactive)}
-            >
-              <Monitor className="mr-1 inline h-3 w-3" />
-              Landscape
             </button>
           </div>
 
@@ -1441,21 +1413,6 @@ function Navbar({
                   <DropdownMenuRadioItem value="m2">Square Metres (m²)</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
                 <DropdownMenuSeparator />
-                <DropdownMenuLabel className="text-xs uppercase tracking-wider text-muted-foreground">
-                  PDF Orientation
-                </DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  value={orientation}
-                  onValueChange={(v) => onOrientation(v as Orientation)}
-                >
-                  <DropdownMenuRadioItem value="portrait">
-                    <Smartphone className="mr-2 h-3.5 w-3.5" /> Portrait
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="landscape">
-                    <Monitor className="mr-2 h-3.5 w-3.5" /> Landscape
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem disabled className="opacity-100">
                   <span className="flex items-center gap-2 text-xs">
                     <span
@@ -1475,7 +1432,7 @@ function Navbar({
           <Button
             size="sm"
             onClick={onExport}
-            className="shrink-0 bg-gradient-to-r from-cyan-500 to-sky-600 text-white hover:from-cyan-400 hover:to-sky-500 dark:from-cyan-400 dark:to-sky-500 dark:text-slate-950 dark:hover:from-cyan-300 dark:hover:to-sky-400 neon-glow"
+            className="shrink-0 bg-gradient-to-r from-red-500 to-red-800 text-white hover:from-red-400 hover:to-red-700 dark:from-red-400 dark:to-red-700 dark:text-slate-950 dark:hover:from-red-300 dark:hover:to-red-600 neon-glow"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export PDF</span>
@@ -1507,17 +1464,17 @@ function Hero({
 }) {
   return (
     <section className="relative overflow-hidden rounded-3xl glass-strong p-6 sm:p-10">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
 
       <div className="relative grid items-end gap-8 md:grid-cols-2">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
             </span>
-            <span className="font-mono uppercase tracking-[0.2em] text-cyan-300">India · 2026</span>
+            <span className="font-mono uppercase tracking-[0.2em] text-orange-300">India · 2026</span>
           </div>
 
           <h1 className="mt-5 text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -1601,7 +1558,7 @@ function StatCard({
       className={cn(
         "rounded-2xl border p-4 backdrop-blur-md",
         accent
-          ? "border-cyan-400/40 bg-cyan-400/[0.06] neon-border"
+          ? "border-red-400/40 bg-red-400/[0.06] neon-border"
           : "border-white/10 bg-white/[0.03]",
       )}
     >
@@ -1648,28 +1605,28 @@ function InputPanel({
         <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-slate-100/70 p-1 dark:bg-white/[0.03]">
           <TabsTrigger
             value="project"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-orange-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Building2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Project</span>
           </TabsTrigger>
           <TabsTrigger
             value="structure"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-orange-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Layers3 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Structure</span>
           </TabsTrigger>
           <TabsTrigger
             value="foundation"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-orange-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Compass className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Foundation</span>
           </TabsTrigger>
           <TabsTrigger
             value="rates"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-orange-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Banknote className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Rates</span>
@@ -1907,7 +1864,7 @@ function SectionHeader({ title, desc, code }: { title: string; desc: string; cod
         <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
       </div>
-      <Badge variant="outline" className="shrink-0 border-cyan-400/30 bg-cyan-400/[0.06] font-mono text-[10px] text-cyan-300">
+      <Badge variant="outline" className="shrink-0 border-red-400/30 bg-red-400/[0.06] font-mono text-[10px] text-orange-300">
         <BookOpen className="h-3 w-3" />
         {code}
       </Badge>
@@ -1940,8 +1897,8 @@ function NumberField({
       : finding?.severity === "warning"
         ? "border-amber-400/50 bg-amber-400/[0.04]"
         : finding?.severity === "info"
-          ? "border-sky-400/40 bg-sky-400/[0.04]"
-          : "border-white/10 bg-white/[0.03] focus-within:border-cyan-400/50"
+          ? "border-red-400/40 bg-red-400/[0.04]"
+          : "border-white/10 bg-white/[0.03] focus-within:border-red-400/50"
 
   return (
     <div>
@@ -2071,18 +2028,12 @@ function ResultsPanel({
   const errCount = findings.filter((f) => f.severity === "error").length
   const warnCount = findings.filter((f) => f.severity === "warning").length
 
-  const pieData = estimate.materials.map((m, idx) => ({
-    name: m.label.length > 22 ? m.label.slice(0, 20) + "…" : m.label,
-    value: Math.round(m.cost),
-    fill: CHART_COLORS[idx % CHART_COLORS.length],
-  }))
-
   return (
     <div className="sticky top-24 space-y-4">
       {/* TOTAL */}
-      <div className="relative overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/[0.08] via-sky-500/[0.04] to-transparent p-6 neon-border">
-        <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="text-xs uppercase tracking-[0.2em] text-cyan-300">Total Project Estimate</div>
+      <div className="relative overflow-hidden rounded-3xl border border-red-400/30 bg-gradient-to-br from-red-400/[0.08] via-red-500/[0.04] to-transparent p-6 neon-border">
+        <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-red-400/10 blur-3xl" />
+        <div className="text-xs uppercase tracking-[0.2em] text-orange-300">Total Project Estimate</div>
         <div className="mt-2 text-4xl font-semibold tracking-tight neon-text sm:text-5xl">
           {fmtINR(estimate.total)}
         </div>
@@ -2110,7 +2061,7 @@ function ResultsPanel({
           </div>
         </dl>
 
-        <Button onClick={onExport} className="mt-5 w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+        <Button onClick={onExport} className="mt-5 w-full bg-red-400 text-slate-950 hover:bg-red-300">
           <Download className="h-4 w-4" />
           Download PDF Report
         </Button>
@@ -2149,49 +2100,6 @@ function ResultsPanel({
         )}
       </div>
 
-      {/* CHART */}
-      <div className="rounded-3xl glass p-5">
-        <h4 className="text-sm font-semibold tracking-tight">Cost Composition</h4>
-<div className="mt-3 h-56 min-h-56 min-w-0">
-            <ResponsiveContainer width="100%" height={224} minWidth={1} minHeight={1}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={48}
-                outerRadius={80}
-                paddingAngle={2}
-                stroke="rgba(2,6,23,0.6)"
-              >
-                {pieData.map((d, i) => (
-                  <Cell key={i} fill={d.fill} />
-                ))}
-              </Pie>
-              <RTooltip
-                contentStyle={{
-                  background: "rgba(15,23,42,0.95)",
-                  border: "1px solid rgba(34,211,238,0.3)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-                formatter={(v: number) => fmtINR(v)}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-2 space-y-1.5">
-          {pieData.slice(0, 4).map((d) => (
-            <div key={d.name} className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: d.fill }} />
-                <span className="text-muted-foreground">{d.name}</span>
-              </div>
-              <span className="font-mono">{fmtINR(d.value)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
@@ -2229,7 +2137,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
               {fmtNum(sqftToM2(estimate.totalArea))} m²) {unit === "m2" ? "metric" : "imperial"}.
             </p>
           </div>
-          <Calculator className="h-5 w-5 text-cyan-300" />
+          <Calculator className="h-5 w-5 text-orange-300" />
         </div>
 
         <div className="mt-5 overflow-hidden rounded-xl border border-white/10">
@@ -2249,7 +2157,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
                   <tr key={m.key} className="border-t border-white/5 transition hover:bg-white/[0.02]">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="grid h-7 w-7 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300">
+                        <span className="grid h-7 w-7 place-items-center rounded-lg bg-red-400/10 text-orange-300">
                           <Icon className="h-3.5 w-3.5" />
                         </span>
                         <div className="leading-tight">
@@ -2288,11 +2196,11 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-semibold">{fmtINR(estimate.contingencyCost)}</td>
               </tr>
-              <tr className="border-t border-cyan-400/30 bg-cyan-400/[0.04]">
-                <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-cyan-200">
+              <tr className="border-t border-red-400/30 bg-red-400/[0.04]">
+                <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-red-200">
                   TOTAL
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-base font-bold text-cyan-200">
+                <td className="px-4 py-3 text-right font-mono text-base font-bold text-red-200">
                   {fmtINR(estimate.total)}
                 </td>
               </tr>
@@ -2307,10 +2215,10 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
             <h3 className="text-lg font-semibold tracking-tight">Cost Distribution</h3>
             <p className="mt-1 text-sm text-muted-foreground">Per-line-item contribution to project total.</p>
           </div>
-          <Sparkles className="h-5 w-5 text-cyan-300" />
+          <Sparkles className="h-5 w-5 text-orange-300" />
         </div>
 
-        <div className="mt-5 h-72 min-h-72 min-w-0">
+        <div className="mt-5 h-72 min-w-0">
           <ResponsiveContainer width="100%" height={288} minWidth={1} minHeight={1}>
             <BarChart data={barData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -2383,7 +2291,7 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
             Every finding cites the IS Code clause that motivated it — read the <em>why</em> before adjusting inputs.
           </p>
         </div>
-        <Badge variant="outline" className="border-cyan-400/30 bg-cyan-400/[0.06] text-cyan-300">
+        <Badge variant="outline" className="border-red-400/30 bg-red-400/[0.06] text-orange-300">
           IVE · {findings.length} entries
         </Badge>
       </div>
@@ -2404,7 +2312,7 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
               : f.severity === "warning"
                 ? "border-amber-400/30 bg-amber-400/[0.05] text-amber-100"
                 : f.severity === "info"
-                  ? "border-sky-400/30 bg-sky-400/[0.04] text-sky-100"
+                  ? "border-red-400/30 bg-red-400/[0.04] text-red-100"
                   : "border-emerald-500/30 bg-emerald-500/[0.05] text-emerald-100"
 
           return (
@@ -2431,7 +2339,7 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
 
 function Footer() {
   const linkClass =
-    "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-cyan-500/10 hover:text-cyan-700 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300"
+    "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-orange-500/10 hover:text-orange-700 dark:hover:bg-red-400/10 dark:hover:text-orange-300"
 
   return (
     <footer className="border-t border-slate-200 bg-white/50 py-10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40">
@@ -2439,7 +2347,7 @@ function Footer() {
         <div className="grid gap-8 md:grid-cols-[1.2fr_0.9fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950">
+              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-800 text-slate-950">
                 <Building2 className="size-4" strokeWidth={2.5} />
               </div>
               <span className="font-mono text-sm font-semibold">
@@ -2449,7 +2357,7 @@ function Footer() {
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
               AI-powered residential construction planning, estimation and design assistance.
             </p>
-            <div className="mt-5 flex items-center gap-2 text-xs text-cyan-700 dark:text-cyan-300">
+            <div className="mt-5 flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
               <Sparkles className="size-3" />
               <span className="font-mono uppercase tracking-[0.16em]">Created by Siddhu Pogula</span>
             </div>
@@ -2460,15 +2368,15 @@ function Footer() {
             <p className="mt-1 text-xs text-muted-foreground">Siddhu Pogula Civil Engineering | Construction Technology | BuildCalc</p>
             <nav aria-label="Siddhu Pogula social links" className="mt-4 flex flex-wrap gap-2">
               <a href="https://github.com/P-Siddhu" target="_blank" rel="noopener noreferrer" className={linkClass} aria-label="GitHub — P-Siddhu">
-                <Github className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Github className="size-3.5 text-red-600 dark:text-red-400" />
                 <span>GitHub</span>
               </a>
               <a href="https://www.linkedin.com/in/siddhu-pogula" target="_blank" rel="noopener noreferrer" className={linkClass} aria-label="LinkedIn — Siddhu Pogula">
-                <Linkedin className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Linkedin className="size-3.5 text-red-600 dark:text-red-400" />
                 <span>LinkedIn</span>
               </a>
               <a href="mailto:siddhupogula7@gmail.com" className={linkClass} aria-label="Email Siddhu Pogula">
-                <Mail className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Mail className="size-3.5 text-red-600 dark:text-red-400" />
                 <span>Email</span>
               </a>
             </nav>
