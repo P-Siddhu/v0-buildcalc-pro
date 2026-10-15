@@ -636,7 +636,7 @@ const fmtNum = (n: number) => new Intl.NumberFormat("en-IN").format(Math.round(n
 const sqftToM2 = (n: number) => n * 0.092903
 const ftToM = (n: number) => n * 0.3048
 
-const CHART_COLORS = ["#22d3ee", "#38bdf8", "#0ea5e9", "#06b6d4", "#67e8f9", "#7dd3fc", "#a5f3fc", "#bae6fd"]
+  const CHART_COLORS = ["#B91C1C", "#EF4444", "#991B1B", "#F87171", "#7F1D1D", "#DC2626", "#525252", "#A3A3A3"]
 
 /* ============================================================================
  *  THEME HOOK — light / dark with localStorage persistence
@@ -1200,23 +1200,23 @@ function HousePlanner({
           <svg viewBox="0 0 100 70" className="h-[clamp(320px,38vw,520px)] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
             <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
-            <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-cyan-600 dark:text-cyan-400" />
+            <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-red-600 dark:text-red-400" />
             <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-amber-500" />
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
             <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
-            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#0891b2" : "#334155"} fillOpacity="0.88" stroke={active ? "#67e8f9" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#67e8f9" strokeWidth="1" />}</g> })}
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#B91C1C" : "#262626"} fillOpacity="0.88" stroke={active ? "#F87171" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
           </svg>
         </div>
 
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
-          <div className="flex max-h-64 min-w-0 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-cyan-400/60 bg-cyan-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-cyan-600 dark:text-cyan-400" /></button>)}</div>
-          {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-cyan-500/10 p-2 text-xs text-cyan-800 dark:text-cyan-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
+          <div className="flex max-h-64 min-w-0 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-red-400/60 bg-red-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-red-600 dark:text-red-400" /></button>)}</div>
+          {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-red-500/10 p-2 text-xs text-red-800 dark:text-red-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
         </div>
       </div>
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
-      <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">1 Project setup</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">2 Rooms</span><span>→</span><span className="rounded-full bg-cyan-500/10 px-3 py-1 text-cyan-700 dark:text-cyan-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
+      <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">1 Project setup</span><span>→</span><span className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">2 Rooms</span><span>→</span><span className="rounded-full bg-red-500/10 px-3 py-1 text-red-700 dark:text-red-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
     </section>
   )
 }
@@ -1277,7 +1277,7 @@ function Sidebar({
               <button
                 key={label}
                 onClick={() => { onNavigate(label); if (label === "House Planner" || label === "Floor Plan") document.getElementById("house-planner")?.scrollIntoView({ behavior: "smooth" }) }}
-                className={cn("group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground", active && "bg-orange-500/10 font-medium text-orange-700 dark:text-orange-300")}
+                className={cn("group relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-left text-sm text-muted-foreground hover:bg-muted hover:text-foreground", active && "bg-red-500/10 font-medium text-red-700 dark:text-red-300")}
                 title={collapsed ? label : undefined}
               >
                 {active && <span className="absolute left-0 h-5 w-0.5 rounded-full bg-primary" />}
@@ -1328,7 +1328,7 @@ function Navbar({
   isCompliant: boolean
 }) {
   const segBase = "rounded-full px-3 py-1 text-xs font-medium transition"
-  const segActive = "bg-cyan-500/15 text-cyan-700 dark:bg-cyan-400/15 dark:text-cyan-300"
+  const segActive = "bg-red-500/15 text-red-700 dark:bg-red-400/15 dark:text-red-300"
   const segInactive = "text-muted-foreground hover:text-foreground"
 
   return (
@@ -1336,7 +1336,7 @@ function Navbar({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
         {/* BRAND */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950 neon-glow">
+          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-red-400 to-red-800 text-slate-950 neon-glow">
             <Building2 className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div className="flex min-w-0 flex-col leading-tight">
@@ -1473,7 +1473,7 @@ function Navbar({
           <Button
             size="sm"
             onClick={onExport}
-            className="shrink-0 bg-gradient-to-r from-cyan-500 to-sky-600 text-white hover:from-cyan-400 hover:to-sky-500 dark:from-cyan-400 dark:to-sky-500 dark:text-slate-950 dark:hover:from-cyan-300 dark:hover:to-sky-400 neon-glow"
+            className="shrink-0 bg-gradient-to-r from-red-500 to-red-800 text-white hover:from-red-400 hover:to-red-700 dark:from-red-400 dark:to-red-700 dark:text-slate-950 dark:hover:from-red-300 dark:hover:to-red-600 neon-glow"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export PDF</span>
@@ -1505,17 +1505,17 @@ function Hero({
 }) {
   return (
     <section className="relative overflow-hidden rounded-3xl glass-strong p-6 sm:p-10">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-sky-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-red-500/10 blur-3xl" />
 
       <div className="relative grid items-end gap-8 md:grid-cols-2">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
             <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
             </span>
-            <span className="font-mono uppercase tracking-[0.2em] text-cyan-300">India · 2026</span>
+            <span className="font-mono uppercase tracking-[0.2em] text-red-300">India · 2026</span>
           </div>
 
           <h1 className="mt-5 text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
@@ -1599,7 +1599,7 @@ function StatCard({
       className={cn(
         "rounded-2xl border p-4 backdrop-blur-md",
         accent
-          ? "border-cyan-400/40 bg-cyan-400/[0.06] neon-border"
+          ? "border-red-400/40 bg-red-400/[0.06] neon-border"
           : "border-white/10 bg-white/[0.03]",
       )}
     >
@@ -1646,28 +1646,28 @@ function InputPanel({
         <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-slate-100/70 p-1 dark:bg-white/[0.03]">
           <TabsTrigger
             value="project"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Building2 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Project</span>
           </TabsTrigger>
           <TabsTrigger
             value="structure"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Layers3 className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Structure</span>
           </TabsTrigger>
           <TabsTrigger
             value="foundation"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Compass className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Foundation</span>
           </TabsTrigger>
           <TabsTrigger
             value="rates"
-            className="gap-1.5 data-[state=active]:bg-cyan-500/15 data-[state=active]:text-cyan-700 dark:data-[state=active]:bg-cyan-400/15 dark:data-[state=active]:text-cyan-200"
+            className="gap-1.5 data-[state=active]:bg-red-500/15 data-[state=active]:text-red-700 dark:data-[state=active]:bg-red-400/15 dark:data-[state=active]:text-red-200"
           >
             <Banknote className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Rates</span>
@@ -1905,7 +1905,7 @@ function SectionHeader({ title, desc, code }: { title: string; desc: string; cod
         <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
         <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
       </div>
-      <Badge variant="outline" className="shrink-0 border-cyan-400/30 bg-cyan-400/[0.06] font-mono text-[10px] text-cyan-300">
+      <Badge variant="outline" className="shrink-0 border-red-400/30 bg-red-400/[0.06] font-mono text-[10px] text-red-300">
         <BookOpen className="h-3 w-3" />
         {code}
       </Badge>
@@ -1938,8 +1938,8 @@ function NumberField({
       : finding?.severity === "warning"
         ? "border-amber-400/50 bg-amber-400/[0.04]"
         : finding?.severity === "info"
-          ? "border-sky-400/40 bg-sky-400/[0.04]"
-          : "border-white/10 bg-white/[0.03] focus-within:border-cyan-400/50"
+          ? "border-red-400/40 bg-red-400/[0.04]"
+          : "border-white/10 bg-white/[0.03] focus-within:border-red-400/50"
 
   return (
     <div>
@@ -2072,9 +2072,9 @@ function ResultsPanel({
   return (
     <div className="sticky top-24 space-y-4">
       {/* TOTAL */}
-      <div className="relative overflow-hidden rounded-3xl border border-cyan-400/30 bg-gradient-to-br from-cyan-400/[0.08] via-sky-500/[0.04] to-transparent p-6 neon-border">
-        <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl" />
-        <div className="text-xs uppercase tracking-[0.2em] text-cyan-300">Total Project Estimate</div>
+      <div className="relative overflow-hidden rounded-3xl border border-red-400/30 bg-gradient-to-br from-red-400/[0.08] via-red-500/[0.04] to-transparent p-6 neon-border">
+        <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-red-400/10 blur-3xl" />
+        <div className="text-xs uppercase tracking-[0.2em] text-red-300">Total Project Estimate</div>
         <div className="mt-2 text-4xl font-semibold tracking-tight neon-text sm:text-5xl">
           {fmtINR(estimate.total)}
         </div>
@@ -2102,7 +2102,7 @@ function ResultsPanel({
           </div>
         </dl>
 
-        <Button onClick={onExport} className="mt-5 w-full bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+        <Button onClick={onExport} className="mt-5 w-full bg-red-400 text-slate-950 hover:bg-red-300">
           <Download className="h-4 w-4" />
           Download PDF Report
         </Button>
@@ -2178,7 +2178,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
               {fmtNum(sqftToM2(estimate.totalArea))} m²) {unit === "m2" ? "metric" : "imperial"}.
             </p>
           </div>
-          <Calculator className="h-5 w-5 text-cyan-300" />
+          <Calculator className="h-5 w-5 text-red-300" />
         </div>
 
         <div className="mt-5 overflow-hidden rounded-xl border border-white/10">
@@ -2198,7 +2198,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
                   <tr key={m.key} className="border-t border-white/5 transition hover:bg-white/[0.02]">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="grid h-7 w-7 place-items-center rounded-lg bg-cyan-400/10 text-cyan-300">
+                        <span className="grid h-7 w-7 place-items-center rounded-lg bg-red-400/10 text-red-300">
                           <Icon className="h-3.5 w-3.5" />
                         </span>
                         <div className="leading-tight">
@@ -2237,11 +2237,11 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
                 </td>
                 <td className="px-4 py-3 text-right font-mono font-semibold">{fmtINR(estimate.contingencyCost)}</td>
               </tr>
-              <tr className="border-t border-cyan-400/30 bg-cyan-400/[0.04]">
-                <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-cyan-200">
+              <tr className="border-t border-red-400/30 bg-red-400/[0.04]">
+                <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-red-200">
                   TOTAL
                 </td>
-                <td className="px-4 py-3 text-right font-mono text-base font-bold text-cyan-200">
+                <td className="px-4 py-3 text-right font-mono text-base font-bold text-red-200">
                   {fmtINR(estimate.total)}
                 </td>
               </tr>
@@ -2256,7 +2256,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
             <h3 className="text-lg font-semibold tracking-tight">Cost Distribution</h3>
             <p className="mt-1 text-sm text-muted-foreground">Per-line-item contribution to project total.</p>
           </div>
-          <Sparkles className="h-5 w-5 text-cyan-300" />
+          <Sparkles className="h-5 w-5 text-red-300" />
         </div>
 
         <div className="mt-5 h-72 min-w-0">
@@ -2332,7 +2332,7 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
             Every finding cites the IS Code clause that motivated it — read the <em>why</em> before adjusting inputs.
           </p>
         </div>
-        <Badge variant="outline" className="border-cyan-400/30 bg-cyan-400/[0.06] text-cyan-300">
+        <Badge variant="outline" className="border-red-400/30 bg-red-400/[0.06] text-red-300">
           IVE · {findings.length} entries
         </Badge>
       </div>
@@ -2353,7 +2353,7 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
               : f.severity === "warning"
                 ? "border-amber-400/30 bg-amber-400/[0.05] text-amber-100"
                 : f.severity === "info"
-                  ? "border-sky-400/30 bg-sky-400/[0.04] text-sky-100"
+                  ? "border-red-400/30 bg-red-400/[0.04] text-red-100"
                   : "border-emerald-500/30 bg-emerald-500/[0.05] text-emerald-100"
 
           return (
@@ -2380,7 +2380,7 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
 
 function Footer() {
   const linkClass =
-    "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-cyan-500/10 hover:text-cyan-700 dark:hover:bg-cyan-400/10 dark:hover:text-cyan-300"
+    "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-red-500/10 hover:text-red-700 dark:hover:bg-red-400/10 dark:hover:text-red-300"
 
   return (
     <footer className="border-t border-slate-200 bg-white/50 py-10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40">
@@ -2388,7 +2388,7 @@ function Footer() {
         <div className="grid gap-8 md:grid-cols-[1.2fr_0.9fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-cyan-400 to-sky-600 text-slate-950">
+              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-red-400 to-red-800 text-slate-950">
                 <Building2 className="size-4" strokeWidth={2.5} />
               </div>
               <span className="font-mono text-sm font-semibold">
@@ -2398,7 +2398,7 @@ function Footer() {
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
               AI-powered residential construction planning, estimation and design assistance.
             </p>
-            <div className="mt-5 flex items-center gap-2 text-xs text-cyan-700 dark:text-cyan-300">
+            <div className="mt-5 flex items-center gap-2 text-xs text-red-700 dark:text-red-300">
               <Sparkles className="size-3" />
               <span className="font-mono uppercase tracking-[0.16em]">Created by Siddhu Pogula</span>
             </div>
@@ -2409,15 +2409,15 @@ function Footer() {
             <p className="mt-1 text-xs text-muted-foreground">Siddhu Pogula Civil Engineering | Construction Technology | BuildCalc</p>
             <nav aria-label="Siddhu Pogula social links" className="mt-4 flex flex-wrap gap-2">
               <a href="https://github.com/P-Siddhu" target="_blank" rel="noopener noreferrer" className={linkClass} aria-label="GitHub — P-Siddhu">
-                <Github className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Github className="size-3.5 text-red-600 dark:text-red-400" />
                 <span>GitHub</span>
               </a>
               <a href="https://www.linkedin.com/in/siddhu-pogula" target="_blank" rel="noopener noreferrer" className={linkClass} aria-label="LinkedIn — Siddhu Pogula">
-                <Linkedin className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Linkedin className="size-3.5 text-red-600 dark:text-red-400" />
                 <span>LinkedIn</span>
               </a>
               <a href="mailto:siddhupogula7@gmail.com" className={linkClass} aria-label="Email Siddhu Pogula">
-                <Mail className="size-3.5 text-cyan-600 dark:text-cyan-400" />
+                <Mail className="size-3.5 text-red-600 dark:text-red-400" />
                 <span>Email</span>
               </a>
             </nav>

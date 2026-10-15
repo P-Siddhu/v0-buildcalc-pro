@@ -4,74 +4,74 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #f97316;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #fff7ed;
-  --accent-foreground: #c2410c;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #f97316;
-  --chart-1: #f97316;
-  --chart-2: #0f172a;
-  --chart-3: #64748b;
-  --chart-4: #16a34a;
-  --chart-5: #f59e0b;
+  --background: #F7F7F7;
+  --foreground: #171717;
+  --card: #FFFFFF;
+  --card-foreground: #171717;
+  --popover: #FFFFFF;
+  --popover-foreground: #171717;
+  --primary: #B91C1C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F1F1F1;
+  --secondary-foreground: #171717;
+  --muted: #F1F1F1;
+  --muted-foreground: #666666;
+  --accent: #F1F1F1;
+  --accent-foreground: #991B1B;
+  --destructive: #B91C1C;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E5E5;
+  --input: #E5E5E5;
+  --ring: #B91C1C;
+  --chart-1: #B91C1C;
+  --chart-2: #525252;
+  --chart-3: #737373;
+  --chart-4: #16A34A;
+  --chart-5: #A16207;
   --radius: 0.75rem;
-  --sidebar: #ffffff;
-  --sidebar-foreground: #0f172a;
-  --sidebar-primary: #f97316;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #fff7ed;
-  --sidebar-accent-foreground: #c2410c;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #f97316;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #171717;
+  --sidebar-primary: #B91C1C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F1F1F1;
+  --sidebar-accent-foreground: #991B1B;
+  --sidebar-border: #E5E5E5;
+  --sidebar-ring: #B91C1C;
 }
 
 .dark {
-  --background: #0b1120;
-  --foreground: #f8fafc;
-  --card: #111827;
-  --card-foreground: #f8fafc;
-  --popover: #111827;
-  --popover-foreground: #f8fafc;
-  --primary: #f97316;
-  --primary-foreground: #ffffff;
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #3b1b0b;
-  --accent-foreground: #fdba74;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: #243247;
-  --input: #243247;
-  --ring: #f97316;
-  --chart-1: #f97316;
-  --chart-2: #f8fafc;
-  --chart-3: #94a3b8;
-  --chart-4: #22c55e;
-  --chart-5: #fbbf24;
-  --sidebar: #111827;
-  --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #f97316;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #3b1b0b;
-  --sidebar-accent-foreground: #fdba74;
-  --sidebar-border: #243247;
-  --sidebar-ring: #f97316;
+  --background: #0A0A0A;
+  --foreground: #FFFFFF;
+  --card: #171717;
+  --card-foreground: #FFFFFF;
+  --popover: #262626;
+  --popover-foreground: #FFFFFF;
+  --primary: #EF4444;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1F1F1F;
+  --secondary-foreground: #FFFFFF;
+  --muted: #1F1F1F;
+  --muted-foreground: #A3A3A3;
+  --accent: #262626;
+  --accent-foreground: #F87171;
+  --destructive: #F87171;
+  --destructive-foreground: #FFFFFF;
+  --border: #333333;
+  --input: #333333;
+  --ring: #F87171;
+  --chart-1: #EF4444;
+  --chart-2: #D4D4D4;
+  --chart-3: #A3A3A3;
+  --chart-4: #4ADE80;
+  --chart-5: #FACC15;
+  --sidebar: #171717;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #EF4444;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #262626;
+  --sidebar-accent-foreground: #F87171;
+  --sidebar-border: #333333;
+  --sidebar-ring: #F87171;
 }
 
 @theme inline {
@@ -120,8 +120,8 @@
   html, body { @apply bg-background text-foreground; }
   body { min-width: 320px; }
   html { scroll-behavior: smooth; }
-  ::selection { background: #fed7aa; color: #7c2d12; }
-  .dark ::selection { background: #9a3412; color: #fff7ed; }
+  ::selection { background: #FECACA; color: #7F1D1D; }
+  .dark ::selection { background: #7F1D1D; color: #FFFFFF; }
 }
 
 @utility glass {
@@ -131,15 +131,15 @@
   @apply border border-border bg-card;
 }
 @utility neon-glow {
-  box-shadow: 0 6px 20px -10px rgb(249 115 22 / 0.7);
+  box-shadow: 0 8px 24px -14px rgb(185 28 28 / 0.75);
 }
 @utility neon-text {
-  color: #ea580c;
+  color: var(--primary);
 }
-.dark .neon-text { color: #fb923c; }
+.dark .neon-text { color: #F87171; }
 @utility neon-border {
-  border-color: rgb(249 115 22 / 0.55);
-  box-shadow: inset 0 0 0 1px rgb(249 115 22 / 0.08);
+  border-color: color-mix(in srgb, var(--primary) 55%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 10%, transparent);
 }
 @utility hairline {
   height: 1px;
@@ -159,8 +159,8 @@ button:active { transform: scale(.98); }
 
 ::-webkit-scrollbar { width: 9px; height: 9px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
-.dark ::-webkit-scrollbar-thumb { background: #334155; }
+::-webkit-scrollbar-thumb { background: #A3A3A3; border-radius: 8px; }
+.dark ::-webkit-scrollbar-thumb { background: #525252; }
 input[type='number']::-webkit-outer-spin-button, input[type='number']::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 input[type='number'] { -moz-appearance: textfield; }
 @media print { body { background: white; color: black; } }
@@ -180,7 +180,7 @@ input[type='number'] { -moz-appearance: textfield; }
   .mobile-bottom-nav { display: grid; }
 }
 
-:focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
 
 /* floor plan remains legible in either theme */
 .floor-plan-canvas { background: #ffffff; color: #0f172a; }
@@ -189,7 +189,7 @@ input[type='number'] { -moz-appearance: textfield; }
 .dark .tone-muted { color: #94a3b8; }
 
 /* scroll progress */
-.scroll-progress { position: fixed; top: 0; left: 0; z-index: 70; height: 2px; width: var(--scroll-progress, 0%); background: #f97316; }
+.scroll-progress { position: fixed; top: 0; left: 0; z-index: 70; height: 2px; width: var(--scroll-progress, 0%); background: var(--primary); }
 
 @media (max-width: 480px) {
   .planner-canvas-height { height: 320px !important; }
