@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF9F6" },
-    { media: "(prefers-color-scheme: dark)", color: "#080B12" },
+    { media: "(prefers-color-scheme: light)", color: "#F5F3EF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1018" },
   ],
   userScalable: true,
   width: "device-width",
@@ -39,7 +39,7 @@ const themeInitScript = `
 (function(){
   try {
     var t = localStorage.getItem('buildcalc-theme');
-    if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark';
+    if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     if (t === 'dark') document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   } catch (_) {
