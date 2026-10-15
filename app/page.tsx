@@ -1162,7 +1162,7 @@ function HousePlanner({
   ]
 
   return (
-    <section className="mt-8 min-w-0 rounded-3xl glass p-3 sm:p-5 lg:p-6" id="house-planner">
+    <section className="mt-8 min-w-0 rounded-2xl glass p-3 sm:p-5 lg:p-6" id="house-planner">
       <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-primary"><Home className="size-5" /><span className="font-mono text-xs uppercase tracking-[0.2em]">House Planner</span></div>
@@ -1463,9 +1463,8 @@ function Hero({
   onReset: () => void
 }) {
   return (
-    <section className="relative overflow-hidden rounded-3xl glass-strong p-6 sm:p-10">
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-red-400/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-16 -left-16 h-72 w-72 rounded-full bg-orange-500/10 blur-3xl" />
+    <section className="relative overflow-hidden rounded-2xl glass-strong p-5 sm:p-8">
+  <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="relative grid items-end gap-8 md:grid-cols-2">
         <div>
@@ -1600,7 +1599,7 @@ function InputPanel({
   const findingFor = (field: keyof Inputs) => findings.find((f) => f.field === field)
 
   return (
-    <div className="rounded-3xl glass p-1">
+    <div className="rounded-2xl glass p-1">
       <Tabs defaultValue="project" className="w-full">
         <TabsList className="grid w-full grid-cols-4 rounded-2xl bg-slate-100/70 p-1 dark:bg-white/[0.03]">
           <TabsTrigger
@@ -2068,7 +2067,7 @@ function ResultsPanel({
       </div>
 
       {/* COMPLIANCE */}
-      <div className="rounded-3xl glass p-5">
+      <div className="rounded-2xl glass p-5">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold tracking-tight">IS Code Compliance</h4>
           <ShieldCheck
@@ -2127,8 +2126,8 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
   const barData = estimate.materials.map((m) => ({ name: m.label.split(" ")[0], cost: Math.round(m.cost) }))
 
   return (
-    <section className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div className="rounded-3xl glass p-6">
+    <section className="mt-8 grid min-w-0 grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="rounded-2xl glass p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold tracking-tight">Material Quantities</h3>
@@ -2209,7 +2208,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
         </div>
       </div>
 
-      <div className="rounded-3xl glass p-6">
+      <div className="rounded-2xl glass p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold tracking-tight">Cost Distribution</h3>
@@ -2283,7 +2282,7 @@ function KV({ label, value }: { label: string; value: string }) {
 
 function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
   return (
-    <section className="mt-12 rounded-3xl glass p-6">
+    <section className="mt-8 rounded-2xl glass p-5 sm:p-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold tracking-tight">Intelligent Validation Log</h3>
