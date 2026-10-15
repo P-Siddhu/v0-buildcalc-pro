@@ -60,8 +60,6 @@ import {
   Eye,
 } from "lucide-react"
 import {
-  PieChart,
-  Pie,
   Cell,
   ResponsiveContainer,
   Tooltip as RTooltip,
@@ -2071,12 +2069,6 @@ function ResultsPanel({
   const errCount = findings.filter((f) => f.severity === "error").length
   const warnCount = findings.filter((f) => f.severity === "warning").length
 
-  const pieData = estimate.materials.map((m, idx) => ({
-    name: m.label.length > 22 ? m.label.slice(0, 20) + "…" : m.label,
-    value: Math.round(m.cost),
-    fill: CHART_COLORS[idx % CHART_COLORS.length],
-  }))
-
   return (
     <div className="sticky top-24 space-y-4">
       {/* TOTAL */}
@@ -2149,49 +2141,6 @@ function ResultsPanel({
         )}
       </div>
 
-      {/* CHART */}
-      <div className="rounded-3xl glass p-5">
-        <h4 className="text-sm font-semibold tracking-tight">Cost Composition</h4>
-<div className="mt-3 h-56 min-w-0">
-            <ResponsiveContainer width="100%" height={224} minWidth={1} minHeight={1}>
-            <PieChart>
-              <Pie
-                data={pieData}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={48}
-                outerRadius={80}
-                paddingAngle={2}
-                stroke="rgba(2,6,23,0.6)"
-              >
-                {pieData.map((d, i) => (
-                  <Cell key={i} fill={d.fill} />
-                ))}
-              </Pie>
-              <RTooltip
-                contentStyle={{
-                  background: "rgba(15,23,42,0.95)",
-                  border: "1px solid rgba(34,211,238,0.3)",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-                formatter={(v: number) => fmtINR(v)}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-        <div className="mt-2 space-y-1.5">
-          {pieData.slice(0, 4).map((d) => (
-            <div key={d.name} className="flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full" style={{ background: d.fill }} />
-                <span className="text-muted-foreground">{d.name}</span>
-              </div>
-              <span className="font-mono">{fmtINR(d.value)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
