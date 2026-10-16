@@ -4,79 +4,79 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #F5F3EF;
-  --foreground: #172538;
+  --background: #FFFFFF;
+  --foreground: #151515;
   --card: #FFFFFF;
-  --card-foreground: #172538;
+  --card-foreground: #151515;
   --popover: #FFFFFF;
-  --popover-foreground: #172538;
-  --primary: #A85F39;
+  --popover-foreground: #151515;
+  --primary: #D92330;
   --primary-foreground: #FFFFFF;
-  --secondary: #F0EEE9;
-  --secondary-foreground: #172538;
-  --muted: #F0EEE9;
-  --muted-foreground: #68778A;
-  --accent: #F4E6DE;
-  --accent-foreground: #783D22;
-  --destructive: #B42332;
+  --secondary: #F2F2F2;
+  --secondary-foreground: #151515;
+  --muted: #F2F2F2;
+  --muted-foreground: #626262;
+  --accent: #FFF3C4;
+  --accent-foreground: #151515;
+  --destructive: #D92330;
   --destructive-foreground: #FFFFFF;
-  --border: #E1DED7;
-  --input: #CFCAC1;
-  --ring: #A85F39;
-  --chart-1: #A85F39;
-  --chart-2: #087F9B;
-  --chart-3: #68778A;
-  --chart-4: #087F5B;
-  --chart-5: #805600;
+  --border: #E2E2E2;
+  --input: #D0D0D0;
+  --ring: #FF303B;
+  --chart-1: #D92330;
+  --chart-2: #FFD447;
+  --chart-3: #626262;
+  --chart-4: #168653;
+  --chart-5: #D97706;
   --radius: 0.75rem;
-  --sidebar: #EFEEE9;
-  --sidebar-foreground: #172538;
-  --sidebar-primary: #A85F39;
+  --sidebar: #F2F2F2;
+  --sidebar-foreground: #151515;
+  --sidebar-primary: #D92330;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F0EEE9;
-  --sidebar-accent-foreground: #783D22;
-  --sidebar-border: #E1DED7;
-  --sidebar-ring: #A85F39;
+  --sidebar-accent: #FFFFFF;
+  --sidebar-accent-foreground: #151515;
+  --sidebar-border: #E2E2E2;
+  --sidebar-ring: #FF303B;
 }
 
 .dark {
-  --background: #0B1018;
-  --foreground: #F1F5F9;
-  --card: #121A26;
-  --card-foreground: #F1F5F9;
-  --popover: #182333;
-  --popover-foreground: #F1F5F9;
-  --primary: #C77B51;
-  --primary-foreground: #15100D;
-  --secondary: #101722;
-  --secondary-foreground: #F1F5F9;
-  --muted: #101722;
-  --muted-foreground: #9AA9BA;
-  --accent: #30231F;
-  --accent-foreground: #D58B61;
-  --destructive: #F87171;
-  --destructive-foreground: #15100D;
-  --border: #293648;
-  --input: #36465A;
-  --ring: #D58B61;
-  --chart-1: #C77B51;
-  --chart-2: #60A5FA;
-  --chart-3: #9AA9BA;
-  --chart-4: #34D399;
-  --chart-5: #FBBF24;
-  --sidebar: #0E1520;
-  --sidebar-foreground: #F1F5F9;
-  --sidebar-primary: #C77B51;
-  --sidebar-primary-foreground: #15100D;
-  --sidebar-accent: #182333;
-  --sidebar-accent-foreground: #D58B61;
-  --sidebar-border: #293648;
-  --sidebar-ring: #D58B61;
+  --background: #101010;
+  --foreground: #F5F5F5;
+  --card: #1C1C1C;
+  --card-foreground: #F5F5F5;
+  --popover: #252525;
+  --popover-foreground: #F5F5F5;
+  --primary: #FF303B;
+  --primary-foreground: #101010;
+  --secondary: #252525;
+  --secondary-foreground: #F5F5F5;
+  --muted: #252525;
+  --muted-foreground: #B8B8B8;
+  --accent: #3A3219;
+  --accent-foreground: #FFD447;
+  --destructive: #D92330;
+  --destructive-foreground: #FFFFFF;
+  --border: #343434;
+  --input: #4A4A4A;
+  --ring: #FFD447;
+  --chart-1: #FF303B;
+  --chart-2: #FFD447;
+  --chart-3: #B8B8B8;
+  --chart-4: #168653;
+  --chart-5: #D97706;
+  --sidebar: #1C1C1C;
+  --sidebar-foreground: #F5F5F5;
+  --sidebar-primary: #FF303B;
+  --sidebar-primary-foreground: #101010;
+  --sidebar-accent: #252525;
+  --sidebar-accent-foreground: #FFD447;
+  --sidebar-border: #343434;
+  --sidebar-ring: #FFD447;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: var(--font-inter-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -120,8 +120,8 @@
   html, body { @apply bg-background text-foreground; }
   body { min-width: 320px; }
   html { scroll-behavior: smooth; }
-  ::selection { background: #FECACA; color: #7F1D1D; }
-  .dark ::selection { background: #7F1D1D; color: #FFFFFF; }
+  ::selection { background: #FFD447; color: #101010; }
+  .dark ::selection { background: #FFD447; color: #101010; }
 }
 
 @utility glass {
@@ -134,7 +134,7 @@
   @apply border border-border bg-popover;
 }
 @utility neon-glow {
-  box-shadow: 0 8px 24px -14px rgb(200 117 77 / 0.55);
+  box-shadow: 0 8px 24px -14px rgb(255 48 59 / 0.45);
 }
 @utility neon-text {
   color: var(--primary);

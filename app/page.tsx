@@ -634,7 +634,7 @@ const fmtNum = (n: number) => new Intl.NumberFormat("en-IN").format(Math.round(n
 const sqftToM2 = (n: number) => n * 0.092903
 const ftToM = (n: number) => n * 0.3048
 
-  const CHART_COLORS = ["#A9542D", "#C8754D", "#874225", "#D88B63", "#A9542D", "#C8754D", "#087E9B", "#42C8E8"]
+  const CHART_COLORS = ["#D92330", "#FF303B", "#FFD447", "#626262", "#B8B8B8", "#168653", "#D97706", "#151515"]
 
 /* ============================================================================
  *  THEME HOOK — light / dark with localStorage persistence
@@ -928,6 +928,13 @@ export default function Page() {
             isCompliant={isCompliant}
             errorCount={errorCount}
             warnCount={warnCount}
+            selectedPreset={
+              inputs.concreteGrade === "M20" && inputs.slabThickness === 110
+                ? "budget"
+                : inputs.concreteGrade === "M30" && inputs.slabThickness === 150
+                  ? "premium"
+                  : "standard"
+            }
             onPreset={(p) => dispatch({ type: "PRESET", preset: p })}
             onReset={() => dispatch({ type: "RESET" })}
           />
@@ -947,7 +954,7 @@ export default function Page() {
             </div>
             {/* RESULTS COLUMN */}
             <div className="min-w-0">
-              <ResultsPanel estimate={estimate} findings={findings} onExport={handleExportPDF} />
+              <ResultsPanel estimate={estimate} findings={findings} />
             </div>
           </div>
 
@@ -1197,10 +1204,10 @@ function HousePlanner({
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
             <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
             <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-red-600 dark:text-red-400" />
-            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-amber-500" />
+            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-yellow-600 dark:text-yellow-400" />
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
             <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
-            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#B91C1C" : "#262626"} fillOpacity="0.88" stroke={active ? "#F87171" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#D92330" : "#252525"} fillOpacity="0.88" stroke={active ? "#FFD447" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#FFD447" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
           </svg>
         </div>
 
@@ -1211,7 +1218,7 @@ function HousePlanner({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Area used for estimate" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
       <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">1 Project setup</span><span>→</span><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">2 Rooms</span><span>→</span><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
     </section>
   )
@@ -1324,11 +1331,11 @@ function Navbar({
   const segInactive = "text-muted-foreground hover:text-foreground"
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-slate-200/70 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/60">
+    <header className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
         {/* BRAND */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-800 text-slate-950 neon-glow">
+          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground neon-glow">
             <Building2 className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div className="flex min-w-0 flex-col leading-tight">
@@ -1432,7 +1439,7 @@ function Navbar({
           <Button
             size="sm"
             onClick={onExport}
-            className="shrink-0 bg-gradient-to-r from-red-500 to-red-800 text-white hover:from-red-400 hover:to-red-700 dark:from-red-400 dark:to-red-700 dark:text-slate-950 dark:hover:from-red-300 dark:hover:to-red-600 neon-glow"
+            className="shrink-0 bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D] neon-glow"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export PDF</span>
@@ -1452,6 +1459,7 @@ function Hero({
   isCompliant,
   errorCount,
   warnCount,
+  selectedPreset,
   onPreset,
   onReset,
 }: {
@@ -1459,6 +1467,7 @@ function Hero({
   isCompliant: boolean
   errorCount: number
   warnCount: number
+  selectedPreset: "budget" | "standard" | "premium"
   onPreset: (p: "budget" | "standard" | "premium") => void
   onReset: () => void
 }) {
@@ -1473,29 +1482,48 @@ function Hero({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
             </span>
-            <span className="font-mono uppercase tracking-[0.2em] text-orange-300">India · 2026</span>
+            <span className="font-mono uppercase tracking-[0.2em] text-primary">INDIA · 2026</span>
           </div>
 
-          <h1 className="mt-5 text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Intelligent Structural <span className="neon-text">Estimator</span> for Indian residential builds.
+          <h1 className="mt-4 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+            Residential construction estimation, made precise.
           </h1>
-          <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground">
-            A safety-first calculator with an embedded reasoning engine. Every input is checked against{" "}
-            <span className="font-medium text-foreground">IS 456</span>,{" "}
-            <span className="font-medium text-foreground">IS 875</span>,{" "}
-            <span className="font-medium text-foreground">IS 1893</span> and{" "}
-            <span className="font-medium text-foreground">NBC 2016</span> — and we explain the engineering{" "}
-            <em>why</em>.
+          <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Build quantities, costs and transparent IS-code checks from one connected project model.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <Button variant="outline" className="border-white/10 bg-white/[0.03]" onClick={() => onPreset("budget")}>
+            <Button
+              variant="outline"
+              aria-pressed={selectedPreset === "budget"}
+              className={cn(
+                "border-border bg-background/60",
+                selectedPreset === "budget" && "border-[#FFD447] bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D]",
+              )}
+              onClick={() => onPreset("budget")}
+            >
               Budget Preset
             </Button>
-            <Button variant="outline" className="border-white/10 bg-white/[0.03]" onClick={() => onPreset("standard")}>
+            <Button
+              variant="outline"
+              aria-pressed={selectedPreset === "standard"}
+              className={cn(
+                "border-border bg-background/60",
+                selectedPreset === "standard" && "border-[#FFD447] bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D]",
+              )}
+              onClick={() => onPreset("standard")}
+            >
               Standard Preset
             </Button>
-            <Button variant="outline" className="border-white/10 bg-white/[0.03]" onClick={() => onPreset("premium")}>
+            <Button
+              variant="outline"
+              aria-pressed={selectedPreset === "premium"}
+              className={cn(
+                "border-border bg-background/60",
+                selectedPreset === "premium" && "border-[#FFD447] bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D]",
+              )}
+              onClick={() => onPreset("premium")}
+            >
               Premium Preset
             </Button>
             <Button variant="ghost" onClick={onReset} className="text-muted-foreground hover:text-foreground">
@@ -1569,8 +1597,8 @@ function StatCard({
         className={cn(
           "mt-2 text-xl font-semibold tracking-tight sm:text-2xl",
           tone === "ok" && "text-emerald-300",
-          tone === "error" && "text-rose-300",
-          tone === "warning" && "text-amber-300",
+          tone === "error" && "text-red-500 dark:text-red-400",
+          tone === "warning" && "text-amber-600 dark:text-amber-400",
           accent && "neon-text",
         )}
       >
@@ -2018,11 +2046,9 @@ function FindingInline({ finding }: { finding: ValidationFinding }) {
 function ResultsPanel({
   estimate,
   findings,
-  onExport,
 }: {
   estimate: Estimate
   findings: ValidationFinding[]
-  onExport: () => void
 }) {
   const errCount = findings.filter((f) => f.severity === "error").length
   const warnCount = findings.filter((f) => f.severity === "warning").length
@@ -2032,7 +2058,7 @@ function ResultsPanel({
       {/* TOTAL */}
       <div className="relative overflow-hidden rounded-3xl border border-red-400/30 bg-gradient-to-br from-red-400/[0.08] via-red-500/[0.04] to-transparent p-6 neon-border">
         <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-red-400/10 blur-3xl" />
-        <div className="text-xs uppercase tracking-[0.2em] text-orange-300">Total Project Estimate</div>
+        <div className="text-xs uppercase tracking-[0.2em] text-primary">Cost Breakdown</div>
         <div className="mt-2 text-4xl font-semibold tracking-tight neon-text sm:text-5xl">
           {fmtINR(estimate.total)}
         </div>
@@ -2060,16 +2086,12 @@ function ResultsPanel({
           </div>
         </dl>
 
-        <Button onClick={onExport} className="mt-5 w-full bg-red-400 text-slate-950 hover:bg-red-300">
-          <Download className="h-4 w-4" />
-          Download PDF Report
-        </Button>
       </div>
 
       {/* COMPLIANCE */}
       <div className="rounded-2xl glass p-5">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold tracking-tight">IS Code Compliance</h4>
+          <h4 className="text-sm font-semibold tracking-tight">IS Code Checks</h4>
           <ShieldCheck
             className={cn(
               "h-4 w-4",
@@ -2133,14 +2155,40 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
             <h3 className="text-lg font-semibold tracking-tight">Material Quantities</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Computed for {fmtNum(estimate.totalArea)} sqft (
-              {fmtNum(sqftToM2(estimate.totalArea))} m²) {unit === "m2" ? "metric" : "imperial"}.
+              {fmtNum(sqftToM2(estimate.totalArea))} m²).
             </p>
           </div>
           <Calculator className="h-5 w-5 text-orange-300" />
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-white/10">
-          <table className="w-full text-sm">
+        <div className="mt-5 rounded-xl border border-border md:overflow-x-auto">
+          <div className="divide-y divide-border md:hidden">
+            {estimate.materials.map((m) => {
+              const Icon = m.icon
+              return (
+                <div key={m.key} className="flex items-center justify-between gap-3 p-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 leading-tight">
+                      <div className="truncate text-sm font-medium">{m.label}</div>
+                      <div className="text-xs text-muted-foreground">{fmtNum(m.qty)} {m.unit}</div>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-mono text-sm font-semibold">{fmtINR(m.cost)}</div>
+                    <div className="text-xs text-muted-foreground">{fmtINR(m.rate)} / unit</div>
+                  </div>
+                </div>
+              )
+            })}
+            <div className="flex items-center justify-between bg-muted/40 px-3 py-3 text-sm">
+              <span className="text-muted-foreground">Material Subtotal</span>
+              <span className="font-mono font-semibold">{fmtINR(estimate.subTotal - estimate.laborCost)}</span>
+            </div>
+          </div>
+          <table className="hidden w-full min-w-[600px] text-sm md:table">
             <thead className="bg-white/[0.03]">
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-3">Material</th>
@@ -2183,26 +2231,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
                   {fmtINR(estimate.subTotal - estimate.laborCost)}
                 </td>
               </tr>
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right text-sm text-muted-foreground">
-                  Labor (skilled + unskilled bundle)
-                </td>
-                <td className="px-4 py-3 text-right font-mono font-semibold">{fmtINR(estimate.laborCost)}</td>
-              </tr>
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right text-sm text-muted-foreground">
-                  Contingency (5%)
-                </td>
-                <td className="px-4 py-3 text-right font-mono font-semibold">{fmtINR(estimate.contingencyCost)}</td>
-              </tr>
-              <tr className="border-t border-red-400/30 bg-red-400/[0.04]">
-                <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-red-200">
-                  TOTAL
-                </td>
-                <td className="px-4 py-3 text-right font-mono text-base font-bold text-red-200">
-                  {fmtINR(estimate.total)}
-                </td>
-              </tr>
+
             </tfoot>
           </table>
         </div>
@@ -2285,13 +2314,13 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
     <section className="mt-8 rounded-2xl glass p-5 sm:p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold tracking-tight">Intelligent Validation Log</h3>
+          <h3 className="text-lg font-semibold tracking-tight">IS Code Checks</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Every finding cites the IS Code clause that motivated it — read the <em>why</em> before adjusting inputs.
           </p>
         </div>
         <Badge variant="outline" className="border-red-400/30 bg-red-400/[0.06] text-orange-300">
-          IVE · {findings.length} entries
+          {findings.length} {findings.length === 1 ? "finding" : "findings"}
         </Badge>
       </div>
 
@@ -2341,12 +2370,12 @@ function Footer() {
     "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-orange-500/10 hover:text-orange-700 dark:hover:bg-red-400/10 dark:hover:text-orange-300"
 
   return (
-    <footer className="border-t border-slate-200 bg-white/50 py-10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40">
+    <footer className="border-t border-border bg-muted/40 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-[1.2fr_0.9fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-800 text-slate-950">
+              <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
                 <Building2 className="size-4" strokeWidth={2.5} />
               </div>
               <span className="font-mono text-sm font-semibold">
@@ -2354,7 +2383,7 @@ function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              AI-powered residential construction planning, estimation and design assistance.
+              Rule-based construction estimation with transparent IS-code checks.
             </p>
             <div className="mt-5 flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
               <Sparkles className="size-3" />
@@ -2382,7 +2411,7 @@ function Footer() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold tracking-tight">Safety-first estimation</h2>
+            <h2 className="text-sm font-semibold tracking-tight">Engineering note</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Built with educational guidance rooted in IS 456, IS 875 and IS 1893. Final structural design must be certified by a licensed engineer.
             </p>
