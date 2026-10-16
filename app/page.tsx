@@ -2128,8 +2128,34 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
           <Calculator className="h-5 w-5 text-orange-300" />
         </div>
 
-        <div className="mt-5 overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
+        <div className="mt-5 rounded-xl border border-border md:overflow-x-auto">
+          <div className="divide-y divide-border md:hidden">
+            {estimate.materials.map((m) => {
+              const Icon = m.icon
+              return (
+                <div key={m.key} className="flex items-center justify-between gap-3 p-3">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 leading-tight">
+                      <div className="truncate text-sm font-medium">{m.label}</div>
+                      <div className="text-xs text-muted-foreground">{fmtNum(m.qty)} {m.unit}</div>
+                    </div>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <div className="font-mono text-sm font-semibold">{fmtINR(m.cost)}</div>
+                    <div className="text-xs text-muted-foreground">{fmtINR(m.rate)} / unit</div>
+                  </div>
+                </div>
+              )
+            })}
+            <div className="flex items-center justify-between bg-muted/40 px-3 py-3 text-sm">
+              <span className="text-muted-foreground">Material Subtotal</span>
+              <span className="font-mono font-semibold">{fmtINR(estimate.subTotal - estimate.laborCost)}</span>
+            </div>
+          </div>
+          <table className="hidden w-full min-w-[600px] text-sm md:table">
             <thead className="bg-white/[0.03]">
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
                 <th className="px-4 py-3">Material</th>
