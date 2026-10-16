@@ -947,7 +947,7 @@ export default function Page() {
             </div>
             {/* RESULTS COLUMN */}
             <div className="min-w-0">
-              <ResultsPanel estimate={estimate} findings={findings} onExport={handleExportPDF} />
+              <ResultsPanel estimate={estimate} findings={findings} />
             </div>
           </div>
 
@@ -1211,7 +1211,7 @@ function HousePlanner({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Estimation sync" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"><PlannerMetric label="Total room area" value={`${Math.round(totalRoomArea).toLocaleString()} sqft`} /><PlannerMetric label="Total built-up area" value={`${Math.round(totalBuiltUp).toLocaleString()} sqft`} /><PlannerMetric label="Remaining plot area" value={`${Math.round(remainingPlot).toLocaleString()} sqft`} /><PlannerMetric label="Area used for estimate" value={`${Math.round(builtUpArea).toLocaleString()} sqft`} /></div>
       <div className="mt-5 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-wider text-muted-foreground"><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">1 Project setup</span><span>→</span><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">2 Rooms</span><span>→</span><span className="rounded-full bg-orange-500/10 px-3 py-1 text-orange-700 dark:text-orange-300">3 Floor plan</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">4 Quantities</span><span>→</span><span className="rounded-full bg-muted px-3 py-1">5 Estimate</span></div>
     </section>
   )
@@ -1324,11 +1324,11 @@ function Navbar({
   const segInactive = "text-muted-foreground hover:text-foreground"
 
   return (
-    <header className="fixed top-0 z-50 w-full border-b border-slate-200/70 bg-white/70 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/60">
+    <header className="fixed top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
         {/* BRAND */}
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-800 text-slate-950 neon-glow">
+          <div className="relative grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground neon-glow">
             <Building2 className="h-5 w-5" strokeWidth={2.5} />
           </div>
           <div className="flex min-w-0 flex-col leading-tight">
@@ -1432,7 +1432,7 @@ function Navbar({
           <Button
             size="sm"
             onClick={onExport}
-            className="shrink-0 bg-gradient-to-r from-red-500 to-red-800 text-white hover:from-red-400 hover:to-red-700 dark:from-red-400 dark:to-red-700 dark:text-slate-950 dark:hover:from-red-300 dark:hover:to-red-600 neon-glow"
+            className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export PDF</span>
@@ -1473,19 +1473,14 @@ function Hero({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
             </span>
-            <span className="font-mono uppercase tracking-[0.2em] text-orange-300">India · 2026</span>
+            <span className="font-mono uppercase tracking-[0.2em] text-primary">INDIA · 2026</span>
           </div>
 
-          <h1 className="mt-5 text-balance text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Intelligent Structural <span className="neon-text">Estimator</span> for Indian residential builds.
+          <h1 className="mt-4 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+            Residential construction estimation, made precise.
           </h1>
-          <p className="mt-4 max-w-xl text-pretty text-base leading-relaxed text-muted-foreground">
-            A safety-first calculator with an embedded reasoning engine. Every input is checked against{" "}
-            <span className="font-medium text-foreground">IS 456</span>,{" "}
-            <span className="font-medium text-foreground">IS 875</span>,{" "}
-            <span className="font-medium text-foreground">IS 1893</span> and{" "}
-            <span className="font-medium text-foreground">NBC 2016</span> — and we explain the engineering{" "}
-            <em>why</em>.
+          <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
+            Build quantities, costs and transparent IS-code checks from one connected project model.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -1569,8 +1564,8 @@ function StatCard({
         className={cn(
           "mt-2 text-xl font-semibold tracking-tight sm:text-2xl",
           tone === "ok" && "text-emerald-300",
-          tone === "error" && "text-rose-300",
-          tone === "warning" && "text-amber-300",
+          tone === "error" && "text-red-500 dark:text-red-400",
+          tone === "warning" && "text-amber-600 dark:text-amber-400",
           accent && "neon-text",
         )}
       >
@@ -2018,11 +2013,9 @@ function FindingInline({ finding }: { finding: ValidationFinding }) {
 function ResultsPanel({
   estimate,
   findings,
-  onExport,
 }: {
   estimate: Estimate
   findings: ValidationFinding[]
-  onExport: () => void
 }) {
   const errCount = findings.filter((f) => f.severity === "error").length
   const warnCount = findings.filter((f) => f.severity === "warning").length
@@ -2032,7 +2025,7 @@ function ResultsPanel({
       {/* TOTAL */}
       <div className="relative overflow-hidden rounded-3xl border border-red-400/30 bg-gradient-to-br from-red-400/[0.08] via-red-500/[0.04] to-transparent p-6 neon-border">
         <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-red-400/10 blur-3xl" />
-        <div className="text-xs uppercase tracking-[0.2em] text-orange-300">Total Project Estimate</div>
+        <div className="text-xs uppercase tracking-[0.2em] text-primary">Cost Breakdown</div>
         <div className="mt-2 text-4xl font-semibold tracking-tight neon-text sm:text-5xl">
           {fmtINR(estimate.total)}
         </div>
@@ -2060,16 +2053,12 @@ function ResultsPanel({
           </div>
         </dl>
 
-        <Button onClick={onExport} className="mt-5 w-full bg-red-400 text-slate-950 hover:bg-red-300">
-          <Download className="h-4 w-4" />
-          Download PDF Report
-        </Button>
       </div>
 
       {/* COMPLIANCE */}
       <div className="rounded-2xl glass p-5">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold tracking-tight">IS Code Compliance</h4>
+          <h4 className="text-sm font-semibold tracking-tight">IS Code Checks</h4>
           <ShieldCheck
             className={cn(
               "h-4 w-4",
@@ -2133,13 +2122,13 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
             <h3 className="text-lg font-semibold tracking-tight">Material Quantities</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Computed for {fmtNum(estimate.totalArea)} sqft (
-              {fmtNum(sqftToM2(estimate.totalArea))} m²) {unit === "m2" ? "metric" : "imperial"}.
+              {fmtNum(sqftToM2(estimate.totalArea))} m²).
             </p>
           </div>
           <Calculator className="h-5 w-5 text-orange-300" />
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-white/10">
+        <div className="mt-5 overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-white/[0.03]">
               <tr className="text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -2183,26 +2172,7 @@ function DetailedBreakdown({ estimate, unit }: { estimate: Estimate; unit: Unit 
                   {fmtINR(estimate.subTotal - estimate.laborCost)}
                 </td>
               </tr>
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right text-sm text-muted-foreground">
-                  Labor (skilled + unskilled bundle)
-                </td>
-                <td className="px-4 py-3 text-right font-mono font-semibold">{fmtINR(estimate.laborCost)}</td>
-              </tr>
-              <tr>
-                <td colSpan={3} className="px-4 py-3 text-right text-sm text-muted-foreground">
-                  Contingency (5%)
-                </td>
-                <td className="px-4 py-3 text-right font-mono font-semibold">{fmtINR(estimate.contingencyCost)}</td>
-              </tr>
-              <tr className="border-t border-red-400/30 bg-red-400/[0.04]">
-                <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-red-200">
-                  TOTAL
-                </td>
-                <td className="px-4 py-3 text-right font-mono text-base font-bold text-red-200">
-                  {fmtINR(estimate.total)}
-                </td>
-              </tr>
+
             </tfoot>
           </table>
         </div>
@@ -2285,13 +2255,13 @@ function ComplianceLog({ findings }: { findings: ValidationFinding[] }) {
     <section className="mt-8 rounded-2xl glass p-5 sm:p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold tracking-tight">Intelligent Validation Log</h3>
+          <h3 className="text-lg font-semibold tracking-tight">IS Code Checks</h3>
           <p className="mt-1 text-sm text-muted-foreground">
             Every finding cites the IS Code clause that motivated it — read the <em>why</em> before adjusting inputs.
           </p>
         </div>
         <Badge variant="outline" className="border-red-400/30 bg-red-400/[0.06] text-orange-300">
-          IVE · {findings.length} entries
+          {findings.length} {findings.length === 1 ? "finding" : "findings"}
         </Badge>
       </div>
 
@@ -2341,12 +2311,12 @@ function Footer() {
     "group inline-flex items-center gap-2 rounded-lg px-2 py-1 -mx-2 text-sm transition hover:bg-orange-500/10 hover:text-orange-700 dark:hover:bg-red-400/10 dark:hover:text-orange-300"
 
   return (
-    <footer className="border-t border-slate-200 bg-white/50 py-10 backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/40">
+    <footer className="border-t border-border bg-muted/40 py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 md:grid-cols-[1.2fr_0.9fr_1fr]">
           <div>
             <div className="flex items-center gap-2">
-              <div className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-orange-400 to-orange-800 text-slate-950">
+              <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
                 <Building2 className="size-4" strokeWidth={2.5} />
               </div>
               <span className="font-mono text-sm font-semibold">
@@ -2354,7 +2324,7 @@ function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              AI-powered residential construction planning, estimation and design assistance.
+              Rule-based construction estimation with transparent IS-code checks.
             </p>
             <div className="mt-5 flex items-center gap-2 text-xs text-orange-700 dark:text-orange-300">
               <Sparkles className="size-3" />
@@ -2382,7 +2352,7 @@ function Footer() {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold tracking-tight">Safety-first estimation</h2>
+            <h2 className="text-sm font-semibold tracking-tight">Engineering note</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Built with educational guidance rooted in IS 456, IS 875 and IS 1893. Final structural design must be certified by a licensed engineer.
             </p>
