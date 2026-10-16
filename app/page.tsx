@@ -928,6 +928,13 @@ export default function Page() {
             isCompliant={isCompliant}
             errorCount={errorCount}
             warnCount={warnCount}
+            selectedPreset={
+              inputs.concreteGrade === "M20" && inputs.slabThickness === 110
+                ? "budget"
+                : inputs.concreteGrade === "M30" && inputs.slabThickness === 150
+                  ? "premium"
+                  : "standard"
+            }
             onPreset={(p) => dispatch({ type: "PRESET", preset: p })}
             onReset={() => dispatch({ type: "RESET" })}
           />
@@ -1432,7 +1439,7 @@ function Navbar({
           <Button
             size="sm"
             onClick={onExport}
-            className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 neon-glow"
+            className="shrink-0 bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D] neon-glow"
           >
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export PDF</span>
@@ -1452,6 +1459,7 @@ function Hero({
   isCompliant,
   errorCount,
   warnCount,
+  selectedPreset,
   onPreset,
   onReset,
 }: {
@@ -1459,6 +1467,7 @@ function Hero({
   isCompliant: boolean
   errorCount: number
   warnCount: number
+  selectedPreset: "budget" | "standard" | "premium"
   onPreset: (p: "budget" | "standard" | "premium") => void
   onReset: () => void
 }) {
@@ -1484,13 +1493,37 @@ function Hero({
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">
-            <Button variant="outline" className="border-white/10 bg-white/[0.03]" onClick={() => onPreset("budget")}>
+            <Button
+              variant="outline"
+              aria-pressed={selectedPreset === "budget"}
+              className={cn(
+                "border-border bg-background/60",
+                selectedPreset === "budget" && "border-[#FFD447] bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D]",
+              )}
+              onClick={() => onPreset("budget")}
+            >
               Budget Preset
             </Button>
-            <Button variant="outline" className="border-white/10 bg-white/[0.03]" onClick={() => onPreset("standard")}>
+            <Button
+              variant="outline"
+              aria-pressed={selectedPreset === "standard"}
+              className={cn(
+                "border-border bg-background/60",
+                selectedPreset === "standard" && "border-[#FFD447] bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D]",
+              )}
+              onClick={() => onPreset("standard")}
+            >
               Standard Preset
             </Button>
-            <Button variant="outline" className="border-white/10 bg-white/[0.03]" onClick={() => onPreset("premium")}>
+            <Button
+              variant="outline"
+              aria-pressed={selectedPreset === "premium"}
+              className={cn(
+                "border-border bg-background/60",
+                selectedPreset === "premium" && "border-[#FFD447] bg-[#FFD447] text-[#101010] hover:bg-[#F5C83D]",
+              )}
+              onClick={() => onPreset("premium")}
+            >
               Premium Preset
             </Button>
             <Button variant="ghost" onClick={onReset} className="text-muted-foreground hover:text-foreground">
