@@ -634,7 +634,7 @@ const fmtNum = (n: number) => new Intl.NumberFormat("en-IN").format(Math.round(n
 const sqftToM2 = (n: number) => n * 0.092903
 const ftToM = (n: number) => n * 0.3048
 
-  const CHART_COLORS = ["#A9542D", "#C8754D", "#874225", "#D88B63", "#A9542D", "#C8754D", "#087E9B", "#42C8E8"]
+  const CHART_COLORS = ["#D92330", "#FF303B", "#FFD447", "#626262", "#B8B8B8", "#168653", "#D97706", "#151515"]
 
 /* ============================================================================
  *  THEME HOOK — light / dark with localStorage persistence
@@ -1197,10 +1197,10 @@ function HousePlanner({
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
             <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
             <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-red-600 dark:text-red-400" />
-            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-amber-500" />
+            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-yellow-600 dark:text-yellow-400" />
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
             <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
-            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#B91C1C" : "#262626"} fillOpacity="0.88" stroke={active ? "#F87171" : "#94a3b8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#bae6fd" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#D92330" : "#252525"} fillOpacity="0.88" stroke={active ? "#FFD447" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#FFD447" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
           </svg>
         </div>
 

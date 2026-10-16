@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F5F3EF" },
-    { media: "(prefers-color-scheme: dark)", color: "#0B1018" },
+    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#101010" },
   ],
   userScalable: true,
   width: "device-width",
@@ -43,7 +43,7 @@ const themeInitScript = `
     if (t === 'dark') document.documentElement.classList.add('dark');
     else document.documentElement.classList.remove('dark');
   } catch (_) {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   }
 })();
 `
