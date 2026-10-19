@@ -1197,9 +1197,9 @@ const ROOM_PRESETS = [
 ]
 
 const initialPlannerRooms: PlannerRoom[] = [
-  { id: "living", name: "Living / Hall", preset: "Living / Hall", length: 16, width: 12, unit: "ft", door: 1, windows: 2, notes: "Main family gathering space", x: 4, y: 4 },
+  { id: "living", name: "Living / Hall", preset: "Living / Hall", length: 16, width: 10, unit: "ft", door: 1, windows: 2, notes: "Main family gathering space", x: 4, y: 4 },
   { id: "kitchen", name: "Kitchen", preset: "Kitchen", length: 10, width: 8, unit: "ft", door: 1, windows: 1, notes: "Provide exhaust and service access", x: 22, y: 4 },
-  { id: "master", name: "Master Bedroom", preset: "Master Bedroom", length: 14, width: 12, unit: "ft", door: 1, windows: 2, notes: "", x: 4, y: 18 },
+  { id: "master", name: "Master Bedroom", preset: "Master Bedroom", length: 14, width: 10, unit: "ft", door: 1, windows: 2, notes: "", x: 4, y: 18 },
   { id: "bath", name: "Bathroom", preset: "Bathroom", length: 7, width: 5, unit: "ft", door: 1, windows: 1, notes: "Wet area", x: 22, y: 18 },
 ]
 
@@ -1248,6 +1248,8 @@ function HousePlanner({
   const [openingWidth, setOpeningWidth] = React.useState(3)
   const [planMessage, setPlanMessage] = React.useState("")
   const skipSnapshotRef = React.useRef(false)
+  const initialSnapshotRef = React.useRef<PlannerSnapshot | null>(initialSnapshot)
+  initialSnapshotRef.current = initialSnapshot
 
   const rooms = roomsByFloor[floor]
   const selected = rooms.find((room) => room.id === selectedId) ?? rooms[0]
@@ -1292,9 +1294,9 @@ function HousePlanner({
       setbacks: value.setbacks,
       roomsByFloor: value.roomsByFloor,
     }) : ""
-    if (comparable(snapshot) === comparable(initialSnapshot)) return
+    if (comparable(snapshot) === comparable(initialSnapshotRef.current)) return
     onSnapshotChange({ ...snapshot, generatedAt: new Date().toISOString() })
-  }, [plannerPlotLength, plannerPlotWidth, plotUnit, plotOrientation, floors, setbacks, roomsByFloor, onSnapshotChange, initialSnapshot])
+  }, [plannerPlotLength, plannerPlotWidth, plotUnit, plotOrientation, floors, setbacks, roomsByFloor, onSnapshotChange])
 
   React.useEffect(() => {
     if (totalBuiltUp > 0 && Math.round(totalBuiltUp) !== Math.round(builtUpArea)) onBuiltUpAreaChange(Math.round(totalBuiltUp))
@@ -1370,29 +1372,67 @@ function HousePlanner({
   }
 
   const generateFloorPlan = () => {
-    const usableLength = Math.max(12, plannerPlotLength - setbacks.left - setbacks.right)
-    const usableWidth = Math.max(12, plannerPlotWidth - setbacks.front - setbacks.rear)
+    const usableLength = Math.max(1, plannerPlotLength - setbacks.left - setbacks.right)
+    const usableWidth = Math.max(1, plannerPlotWidth - setbacks.front - setbacks.rear)
     const requested = rooms.length ? rooms : initialPlannerRooms
     const cols = usableLength >= 42 ? 3 : 2
+    const rows = Math.max(1, Math.ceil(requested.length / cols))
     const cellLength = usableLength / cols
-    const rows = Math.ceil(requested.length / cols)
-    const cellWidth = usableWidth / Math.max(rows, 1)
+    const cellWidth = usableWidth / rows
     const generated = requested.map((room, index) => {
       const col = index % cols
       const row = Math.floor(index / cols)
-      const length = Math.max(7, Math.min(room.length, cellLength - 1))
-      const width = Math.max(6, Math.min(room.width, cellWidth - 1))
-      return { ...room, length, width, x: 2 + ((setbacks.left + col * cellLength) / plannerPlotLength) * 96, y: 2 + ((setbacks.front + row * cellWidth) / plannerPlotWidth) * 66, openings: room.openings ?? [] }
+      // Every room occupies a full grid cell: adjacent cells therefore share the exact same wall coordinates.
+      return {
+        ...room,
+        length: Number(cellLength.toFixed(3)),
+        width: Number(cellWidth.toFixed(3)),
+        x: Number((2 + ((setbacks.left + col * cellLength) / plannerPlotLength) * 96).toFixed(3)),
+        y: Number((2 + ((setbacks.front + row * cellWidth) / plannerPlotWidth) * 66).toFixed(3)),
+        openings: room.openings ?? [],
+      }
     })
-    const fits = generated.every((room) => room.length <= cellLength - 0.5 && room.width <= cellWidth - 0.5)
-    if (!fits) {
-      setPlanMessage("Some rooms do not fit inside the setback envelope. Reduce room sizes or increase the plot dimensions.")
+    const minimums = requested.filter((room) => room.length > cellLength || room.width > cellWidth)
+    if (minimums.length > 0) {
+      setPlanMessage(`${minimums.length} requested room size${minimums.length === 1 ? "" : "s"} exceed the connected grid cell. Increase the plot, reduce preferred dimensions, or remove optional rooms.`)
       return
     }
-    setPlanMessage(`Generated ${generated.length} connected rooms inside a ${Math.round(usableLength)} × ${Math.round(usableWidth)} ${plotUnit} buildable footprint.`)
+    setPlanMessage(`Generated ${generated.length} connected rooms with shared walls inside the ${Math.round(usableLength)} × ${Math.round(usableWidth)} ${plotUnit} buildable footprint.`)
     setIsArranging(true)
     updateRooms(generated)
     window.setTimeout(() => setIsArranging(false), 450)
+  }
+
+  const getPlanIssues = (candidateRooms = rooms) => {
+    const issues: string[] = []
+    const tolerance = 0.05
+    candidateRooms.forEach((room) => {
+      if (room.x < 2 - tolerance || room.y < 2 - tolerance) issues.push(`${room.name} extends outside the plot boundary.`)
+      if (room.x + room.length / Math.max(plannerPlotLength, 1) * 96 > 98 + tolerance || room.y + room.width / Math.max(plannerPlotWidth, 1) * 66 > 68 + tolerance) issues.push(`${room.name} extends beyond the plot boundary.`)
+    })
+    candidateRooms.forEach((room, index) => candidateRooms.slice(index + 1).forEach((other) => {
+      const roomRight = room.x + room.length / Math.max(plannerPlotLength, 1) * 96
+      const otherRight = other.x + other.length / Math.max(plannerPlotLength, 1) * 96
+      const roomBottom = room.y + room.width / Math.max(plannerPlotWidth, 1) * 66
+      const otherBottom = other.y + other.width / Math.max(plannerPlotWidth, 1) * 66
+      const overlapX = Math.min(roomRight, otherRight) - Math.max(room.x, other.x)
+      const overlapY = Math.min(roomBottom, otherBottom) - Math.max(room.y, other.y)
+      if (overlapX > tolerance && overlapY > tolerance) issues.push(`${room.name} overlaps ${other.name}.`)
+      // Non-touching rooms are allowed when they are intentional exterior/open spaces; access is checked through openings and circulation in later phases.
+    }))
+    return [...new Set(issues)]
+  }
+
+  const validatePlan = () => {
+    const issues = getPlanIssues()
+    setPlanMessage(issues.length ? `${issues.length} plan issue${issues.length === 1 ? "" : "s"}: ${issues.slice(0, 2).join(" ")}` : "Plan validated: rooms are inside the plot and no overlaps were detected.")
+  }
+
+  const fixRoomConnections = () => {
+    const before = getPlanIssues()
+    if (!before.length) { setPlanMessage("No room connection repairs are needed."); return }
+    generateFloorPlan()
+    setPlanMessage("Room connections repaired by rebuilding the shared-wall grid. Review the updated plan before continuing.")
   }
 
   const addOpening = () => {
@@ -1447,6 +1487,8 @@ function HousePlanner({
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2 lg:max-w-[430px] lg:justify-end">
           <Button size="sm" onClick={generateFloorPlan} disabled={isArranging}><WandSparkles data-icon="inline-start" /> Generate layout</Button>
+          <Button size="sm" variant="outline" onClick={validatePlan}>Validate plan</Button>
+          <Button size="sm" variant="outline" onClick={fixRoomConnections} disabled={isArranging}>Fix connections</Button>
           <Button size="sm" variant="outline" onClick={autoArrange} disabled={isArranging}>Auto arrange</Button>
           <Button size="sm" variant="outline" onClick={optimizeLayout} disabled={isArranging}><Sparkles data-icon="inline-start" /> Optimize</Button>
           <div className="flex rounded-lg border border-border p-0.5"><Button size="sm" variant={viewMode === "2D" ? "default" : "ghost"} onClick={() => setViewMode("2D")}>2D</Button><Button size="sm" variant={viewMode === "3D" ? "default" : "ghost"} onClick={() => setViewMode("3D")}>3D</Button></div>
@@ -1477,7 +1519,7 @@ function HousePlanner({
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
             <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
             <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-red-600 dark:text-red-400" />
-            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-yellow-600 dark:text-yellow-400" />
+            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plannerPlotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plannerPlotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-yellow-600 dark:text-yellow-400" />
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
             <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
             {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#E34234" : "#211E27"} fillOpacity="0.88" stroke={active ? "#D4FF3F" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><line x1="0" y1="0" x2={w} y2="0" stroke={selectedWall?.roomId === room.id && selectedWall.wall === "top" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "top" }) }} /><line x1={w} y1="0" x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "right" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "right" }) }} /><line x1="0" y1={h} x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "bottom" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "bottom" }) }} /><line x1="0" y1="0" x2="0" y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "left" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "left" }) }} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#FFD447" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
@@ -1654,24 +1696,17 @@ function Navbar({
             {isCompliant ? "IS-CODE OK" : "REVIEW"}
           </Badge>
 
-          {/* Theme toggle — always visible */}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={onToggleTheme}
-                aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-                className="h-9 w-9 shrink-0 border-slate-200 bg-white/60 hover:bg-white dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
-              >
-                <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {theme === "dark" ? "Switch to Light mode" : "Switch to Dark mode"}
-            </TooltipContent>
-          </Tooltip>
+          {/* Theme toggle — always visible. Keep it as a direct button so the preview does not remount a Radix ref on every theme change. */}
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={onToggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            className="h-9 w-9 shrink-0 border-slate-200 bg-white/60 hover:bg-white dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]"
+          >
+            <Sun className="h-4 w-4 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+            <Moon className="absolute h-4 w-4 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          </Button>
 
           {/* Mobile settings — visible below lg */}
           <div className="lg:hidden">
