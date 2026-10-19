@@ -1247,6 +1247,11 @@ function HousePlanner({
   const [openingType, setOpeningType] = React.useState<PlannerOpening["type"]>("door")
   const [openingWidth, setOpeningWidth] = React.useState(3)
   const [planMessage, setPlanMessage] = React.useState("")
+  const [showDimensions, setShowDimensions] = React.useState(true)
+  const [showRoomLabels, setShowRoomLabels] = React.useState(true)
+  const [showOpenings, setShowOpenings] = React.useState(true)
+  const [showGrid, setShowGrid] = React.useState(true)
+  const [drawingScale, setDrawingScale] = React.useState("1:100")
   const skipSnapshotRef = React.useRef(false)
   const initialSnapshotRef = React.useRef<PlannerSnapshot | null>(initialSnapshot)
   initialSnapshotRef.current = initialSnapshot
@@ -1257,6 +1262,12 @@ function HousePlanner({
   const totalRoomArea = rooms.reduce((sum, room) => sum + roomArea(room), 0)
   const totalBuiltUp = Object.values(roomsByFloor).reduce((sum, floorRooms) => sum + floorRooms.reduce((s, room) => s + roomArea(room), 0), 0)
   const remainingPlot = Math.max(0, plotArea - totalRoomArea)
+  const displayFactor = plotUnit === "m" ? 0.3048 : 1
+  const formatDimension = (value: number) => `${(value * displayFactor).toFixed(value * displayFactor < 10 ? 1 : 0)} ${plotUnit}`
+  const plotWidthCanvas = 96
+  const plotHeightCanvas = 66
+  const roomCanvasWidth = (room: PlannerRoom) => room.length / Math.max(plannerPlotLength, 1) * plotWidthCanvas
+  const roomCanvasHeight = (room: PlannerRoom) => room.width / Math.max(plannerPlotWidth, 1) * plotHeightCanvas
 
   React.useEffect(() => {
     if (!initialSnapshot) return
@@ -1495,7 +1506,16 @@ function HousePlanner({
           <Button size="sm" variant={vastuMode ? "default" : "outline"} onClick={() => setVastuMode((value) => !value)}><Eye data-icon="inline-start" /> Vastu {vastuMode ? "on" : "off"}</Button>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom <span className="rounded-full bg-muted px-2 py-1">Planning preference only</span>{isArranging && <span className="text-primary">Updating layout…</span>}</div>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"><Move className="size-3.5" /> Drag rooms on canvas · scroll to zoom <span className="rounded-full bg-muted px-2 py-1">CAD preview · not construction-ready</span>{isArranging && <span className="text-primary">Updating layout…</span>}</div>
+      <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-background/50 p-2" aria-label="Drawing controls">
+        <span className="mr-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Drawing</span>
+        <Button size="sm" variant={showDimensions ? "default" : "outline"} onClick={() => setShowDimensions((value) => !value)}>Dimensions</Button>
+        <Button size="sm" variant={showRoomLabels ? "default" : "outline"} onClick={() => setShowRoomLabels((value) => !value)}>Labels</Button>
+        <Button size="sm" variant={showOpenings ? "default" : "outline"} onClick={() => setShowOpenings((value) => !value)}>Openings</Button>
+        <Button size="sm" variant={showGrid ? "default" : "outline"} onClick={() => setShowGrid((value) => !value)}>Grid</Button>
+        <PlannerSelect label="Scale" value={drawingScale} options={["1:50", "1:100", "1:200"]} onChange={setDrawingScale} />
+        <Button size="sm" variant="outline" onClick={() => setZoom(1)}>Fit view</Button>
+      </div>
 
       <div className="mt-6 grid min-w-0 gap-3 rounded-2xl border border-border/70 bg-background/40 p-4 md:grid-cols-2 xl:grid-cols-[repeat(6,minmax(0,1fr))]">
         <PlannerNumber label="Plot length" value={plannerPlotLength} onChange={setPlannerPlotLength} suffix={plotUnit} />
@@ -1517,12 +1537,16 @@ function HousePlanner({
         <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
           <svg viewBox="0 0 100 70" className="h-[clamp(320px,38vw,520px)] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
             <defs><pattern id="grid" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M 5 0 L 0 0 0 5" fill="none" stroke="currentColor" strokeWidth="0.12" opacity="0.3" /></pattern></defs>
-            <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />
-            <rect x="2" y="2" width="96" height="66" fill="none" stroke="currentColor" strokeWidth="0.5" strokeDasharray="2 1" className="text-red-600 dark:text-red-400" />
-            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plannerPlotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plannerPlotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-yellow-600 dark:text-yellow-400" />
+            {showGrid && <rect x="0" y="0" width="100" height="70" fill="url(#grid)" className="text-slate-400 dark:text-slate-600" />}
+            <rect x="2" y="2" width="96" height="66" fill="none" stroke="#E34234" strokeWidth="0.5" strokeDasharray="2 1" />
+            <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plannerPlotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plannerPlotWidth, 1) * 66} fill="none" stroke="#CBB3E8" strokeWidth="0.3" strokeDasharray="1 1" />
+            {showDimensions && <>
+              <line x1="2" y1="0.8" x2="98" y2="0.8" stroke="#17151C" strokeWidth="0.25" /><text x="50" y="0.5" textAnchor="middle" fontSize="2" className="fill-slate-700 dark:fill-slate-200">{formatDimension(plannerPlotLength)} overall plot</text>
+              <line x1="0.8" y1="2" x2="0.8" y2="68" stroke="#17151C" strokeWidth="0.25" /><text x="0.4" y="35" textAnchor="middle" fontSize="2" transform="rotate(-90 0.4 35)" className="fill-slate-700 dark:fill-slate-200">{formatDimension(plannerPlotWidth)} overall depth</text>
+            </>}
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
-            <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
-            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#E34234" : "#211E27"} fillOpacity="0.88" stroke={active ? "#D4FF3F" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><line x1="0" y1="0" x2={w} y2="0" stroke={selectedWall?.roomId === room.id && selectedWall.wall === "top" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "top" }) }} /><line x1={w} y1="0" x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "right" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "right" }) }} /><line x1="0" y1={h} x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "bottom" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "bottom" }) }} /><line x1="0" y1="0" x2="0" y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "left" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "left" }) }} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#FFD447" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
+            <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing · scale {drawingScale}</text>
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plannerPlotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#E34234" : "#211E27"} fillOpacity="0.88" stroke={active ? "#D4FF3F" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><line x1="0" y1="0" x2={w} y2="0" stroke={selectedWall?.roomId === room.id && selectedWall.wall === "top" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "top" }) }} /><line x1={w} y1="0" x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "right" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "right" }) }} /><line x1="0" y1={h} x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "bottom" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "bottom" }) }} /><line x1="0" y1="0" x2="0" y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "left" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "left" }) }} />{showRoomLabels && <><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#D4FF3F" pointerEvents="none">{formatDimension(room.length)} × {formatDimension(room.width)}</text><text x={w / 2} y={h / 2 + 6} textAnchor="middle" fontSize="1.7" fill="#CBB3E8" pointerEvents="none">{Math.round(roomArea(room))} sqft</text></>}{showDimensions && <><line x1="0" y1={h + 1.2} x2={w} y2={h + 1.2} stroke="#64748b" strokeWidth="0.2" /><text x={w / 2} y={h + 3} textAnchor="middle" fontSize="1.7" className="fill-slate-600 dark:fill-slate-300">{formatDimension(room.length)}</text></>}{showOpenings && room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#D4FF3F" strokeWidth="0.45" />}{showOpenings && (room.openings ?? []).map((opening) => { const position = opening.offset / Math.max(opening.wall === "top" || opening.wall === "bottom" ? room.length : room.width, 1); const openingSize = opening.width / Math.max(opening.wall === "top" || opening.wall === "bottom" ? room.length : room.width, 1); return <g key={opening.id} stroke="#CBB3E8" strokeWidth="0.7"><line x1={opening.wall === "top" || opening.wall === "bottom" ? (position - openingSize / 2) * w : opening.wall === "left" ? 0 : w} y1={opening.wall === "top" ? 0 : opening.wall === "bottom" ? h : (position - openingSize / 2) * h} x2={opening.wall === "top" || opening.wall === "bottom" ? (position + openingSize / 2) * w : opening.wall === "left" ? 0 : w} y2={opening.wall === "top" ? 0 : opening.wall === "bottom" ? h : (position + openingSize / 2) * h} /></g> })}{showOpenings && room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
           </svg>
         </div>
 
