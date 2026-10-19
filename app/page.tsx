@@ -56,6 +56,11 @@ import {
   Maximize2,
   WandSparkles,
   Eye,
+  Search,
+  Archive,
+  RotateCw,
+  MoreHorizontal,
+  FolderOpen,
 } from "lucide-react"
 import {
   Cell,
@@ -134,6 +139,16 @@ type Inputs = {
   laborRate: number // ₹/sqft (skilled+unskilled bundle)
 }
 
+type ProjectRecord = {
+  id: string
+  name: string
+  status: "active" | "archived"
+  inputs: Inputs
+  plannerSnapshot: PlannerSnapshot | null
+  createdAt: string
+  updatedAt: string
+}
+
 type State = {
   unit: Unit
   orientation: Orientation
@@ -168,6 +183,9 @@ const DEFAULT_INPUTS: Inputs = {
   brickRate: 9,
   laborRate: 320,
 }
+
+const PROJECTS_STORAGE_KEY = "buildcalc-projects-v3"
+const ACTIVE_PROJECT_STORAGE_KEY = "buildcalc-active-project-v3"
 
 const initialState: State = {
   unit: "sqft",
@@ -683,17 +701,35 @@ export default function Page() {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
   const [activeModule, setActiveModule] = React.useState("Dashboard")
   const [plannerSnapshot, setPlannerSnapshot] = React.useState<PlannerSnapshot | null>(null)
+  const [projects, setProjects] = React.useState<ProjectRecord[]>([])
+  const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
+  const [projectQuery, setProjectQuery] = React.useState("")
+  const [projectFilter, setProjectFilter] = React.useState<"all" | "active" | "archived">("all")
   const [saveStatus, setSaveStatus] = React.useState<"loading" | "saved" | "saving" | "error">("loading")
   const hasHydratedProject = React.useRef(false)
+  const saveTimer = React.useRef<number | null>(null)
 
   React.useEffect(() => {
     try {
-      const raw = window.localStorage.getItem("buildcalc-project-v2")
-      if (raw) {
-        const saved = JSON.parse(raw) as { inputs?: Inputs; plannerSnapshot?: PlannerSnapshot }
-        if (saved.inputs) dispatch({ type: "LOAD_PROJECT", inputs: saved.inputs })
-        if (saved.plannerSnapshot) setPlannerSnapshot(saved.plannerSnapshot)
+      const raw = window.localStorage.getItem(PROJECTS_STORAGE_KEY)
+      const legacyRaw = window.localStorage.getItem("buildcalc-project-v2")
+      let stored: ProjectRecord[] = raw ? JSON.parse(raw) : []
+      if (!Array.isArray(stored) || stored.some((project) => !project.id || !project.inputs)) stored = []
+      if (!stored.length && legacyRaw) {
+        const legacy = JSON.parse(legacyRaw) as { inputs?: Inputs; plannerSnapshot?: PlannerSnapshot }
+        const now = new Date().toISOString()
+        stored = [{ id: crypto.randomUUID(), name: "My residential project", status: "active", inputs: { ...DEFAULT_INPUTS, ...legacy.inputs }, plannerSnapshot: legacy.plannerSnapshot ?? null, createdAt: now, updatedAt: now }]
       }
+      if (!stored.length) {
+        const now = new Date().toISOString()
+        stored = [{ id: crypto.randomUUID(), name: "My residential project", status: "active", inputs: DEFAULT_INPUTS, plannerSnapshot: null, createdAt: now, updatedAt: now }]
+      }
+      const selected = window.localStorage.getItem(ACTIVE_PROJECT_STORAGE_KEY)
+      const active = stored.find((project) => project.id === selected) ?? stored.find((project) => project.status === "active") ?? stored[0]
+      setProjects(stored)
+      setActiveProjectId(active.id)
+      dispatch({ type: "LOAD_PROJECT", inputs: active.inputs })
+      setPlannerSnapshot(active.plannerSnapshot)
     } catch {
       setSaveStatus("error")
     } finally {
@@ -703,16 +739,23 @@ export default function Page() {
   }, [])
 
   React.useEffect(() => {
-    if (!hasHydratedProject.current) return
+    if (!hasHydratedProject.current || !activeProjectId) return
     setSaveStatus("saving")
-    try {
-      window.localStorage.setItem("buildcalc-project-v2", JSON.stringify({ inputs, plannerSnapshot, savedAt: new Date().toISOString() }))
-      const timer = window.setTimeout(() => setSaveStatus("saved"), 350)
-      return () => window.clearTimeout(timer)
-    } catch {
-      setSaveStatus("error")
-    }
-  }, [inputs, plannerSnapshot])
+    if (saveTimer.current) window.clearTimeout(saveTimer.current)
+    saveTimer.current = window.setTimeout(() => {
+      try {
+        const now = new Date().toISOString()
+        const nextProjects = projects.map((project) => project.id === activeProjectId ? { ...project, inputs, plannerSnapshot, updatedAt: now } : project)
+        window.localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(nextProjects))
+        window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, activeProjectId)
+        setProjects(nextProjects)
+        setSaveStatus("saved")
+      } catch {
+        setSaveStatus("error")
+      }
+    }, 350)
+    return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current) }
+  }, [inputs, plannerSnapshot, activeProjectId])
 
   React.useEffect(() => {
     const updateProgress = () => {
@@ -733,6 +776,71 @@ export default function Page() {
 
   const set = <K extends keyof Inputs>(key: K, value: Inputs[K]) =>
     dispatch({ type: "SET_INPUT", key, value: value as Inputs[keyof Inputs] })
+
+  const persistProjects = React.useCallback((nextProjects: ProjectRecord[]) => {
+    try {
+      window.localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(nextProjects))
+      setProjects(nextProjects)
+      setSaveStatus("saved")
+      return true
+    } catch {
+      setSaveStatus("error")
+      return false
+    }
+  }, [])
+
+  const switchProject = React.useCallback((project: ProjectRecord) => {
+    if (project.id === activeProjectId) return
+    if (saveStatus === "saving") return
+    setActiveProjectId(project.id)
+    window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, project.id)
+    dispatch({ type: "LOAD_PROJECT", inputs: project.inputs })
+    setPlannerSnapshot(project.plannerSnapshot)
+    setActiveModule("Dashboard")
+  }, [activeProjectId, saveStatus])
+
+  const createProject = React.useCallback(() => {
+    const now = new Date().toISOString()
+    const project: ProjectRecord = { id: crypto.randomUUID(), name: `New project ${projects.length + 1}`, status: "active", inputs: DEFAULT_INPUTS, plannerSnapshot: null, createdAt: now, updatedAt: now }
+    const next = [...projects, project]
+    if (!persistProjects(next)) return
+    setActiveProjectId(project.id)
+    window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, project.id)
+    dispatch({ type: "LOAD_PROJECT", inputs: project.inputs })
+    setPlannerSnapshot(null)
+    setActiveModule("Dashboard")
+  }, [persistProjects, projects])
+
+  const renameProject = React.useCallback((project: ProjectRecord) => {
+    const name = window.prompt("Project name", project.name)?.trim()
+    if (!name || name === project.name) return
+    persistProjects(projects.map((item) => item.id === project.id ? { ...item, name, updatedAt: new Date().toISOString() } : item))
+  }, [persistProjects, projects])
+
+  const duplicateProject = React.useCallback((project: ProjectRecord) => {
+    const now = new Date().toISOString()
+    const copy = { ...project, id: crypto.randomUUID(), name: `${project.name} copy`, createdAt: now, updatedAt: now, status: "active" as const }
+    persistProjects([...projects, copy])
+    switchProject(copy)
+  }, [persistProjects, projects, switchProject])
+
+  const updateProjectStatus = React.useCallback((project: ProjectRecord, status: ProjectRecord["status"]) => {
+    if (status === "archived" && !window.confirm(`Archive ${project.name}?`)) return
+    persistProjects(projects.map((item) => item.id === project.id ? { ...item, status, updatedAt: new Date().toISOString() } : item))
+  }, [persistProjects, projects])
+
+  const deleteProject = React.useCallback((project: ProjectRecord) => {
+    if (projects.length === 1) return
+    if (!window.confirm(`Delete ${project.name}? This cannot be undone.`)) return
+    const next = projects.filter((item) => item.id !== project.id)
+    persistProjects(next)
+    if (project.id === activeProjectId) switchProject(next[0])
+  }, [activeProjectId, persistProjects, projects, switchProject])
+
+  const filteredProjects = projects.filter((project) => {
+    const matchesQuery = project.name.toLowerCase().includes(projectQuery.toLowerCase())
+    return matchesQuery && (projectFilter === "all" || project.status === projectFilter)
+  }).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 
   const handleExportPDF = React.useCallback(async () => {
     const [{ default: jsPDF }, autoTableMod] = await Promise.all([
@@ -959,11 +1067,38 @@ export default function Page() {
           <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-xs shadow-sm">
             <div className="flex min-w-0 items-center gap-2">
               <span className={cn("h-2 w-2 rounded-full", saveStatus === "saved" ? "bg-[#168653]" : saveStatus === "error" ? "bg-primary" : "animate-pulse bg-[#D4FF3F]")} />
-              <span className="truncate font-medium">My residential project</span>
+              <span className="truncate font-medium">{projects.find((project) => project.id === activeProjectId)?.name ?? "Project workspace"}</span>
               <span className="hidden text-muted-foreground sm:inline">Local workspace</span>
             </div>
             <span className="shrink-0 text-muted-foreground">{saveStatus === "saving" ? "Saving…" : saveStatus === "error" ? "Save failed" : saveStatus === "loading" ? "Loading…" : "Saved locally"}</span>
           </div>
+          {activeModule === "Projects" && (
+            <section className="mb-8 rounded-[2rem] border border-border bg-card p-4 shadow-sm sm:p-6" aria-labelledby="projects-heading">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Local workspace</div>
+                  <h1 id="projects-heading" className="editorial mt-2 text-4xl font-semibold">Projects</h1>
+                  <p className="mt-2 text-sm text-muted-foreground">Saved on this device. Cloud sync and collaboration are not enabled.</p>
+                </div>
+                <Button onClick={createProject} className="bg-primary text-primary-foreground"><Plus className="mr-2 size-4" /> New project</Button>
+              </div>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <div className="relative flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={projectQuery} onChange={(event) => setProjectQuery(event.target.value)} placeholder="Search projects" className="pl-9" aria-label="Search projects" /></div>
+                <Select value={projectFilter} onValueChange={(value) => setProjectFilter(value as typeof projectFilter)}><SelectTrigger className="w-full sm:w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All projects</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="archived">Archived</SelectItem></SelectContent></Select>
+              </div>
+              <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                {filteredProjects.length === 0 ? <div className="col-span-full rounded-2xl border border-dashed border-border p-10 text-center"><FolderOpen className="mx-auto size-8 text-muted-foreground" /><p className="mt-3 font-medium">No projects found</p><p className="mt-1 text-sm text-muted-foreground">Create a project or adjust your filters.</p></div> : filteredProjects.map((project) => {
+                  const isActive = project.id === activeProjectId
+                  return <article key={project.id} className={cn("rounded-2xl border p-4 transition-colors", isActive ? "border-[#D4FF3F] bg-[#D4FF3F]/10" : "border-border bg-background/50")}>
+                    <div className="flex items-start justify-between gap-3"><button className="min-w-0 text-left" onClick={() => switchProject(project)}><h2 className="truncate font-semibold">{project.name}</h2><p className="mt-1 text-xs text-muted-foreground">Modified {new Date(project.updatedAt).toLocaleDateString("en-IN")}</p></button><Badge variant={project.status === "active" ? "default" : "secondary"}>{project.status}</Badge></div>
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs text-muted-foreground"><span className="rounded-full bg-muted px-2 py-1">Estimator</span>{project.plannerSnapshot && <span className="rounded-full bg-muted px-2 py-1">Planner</span>}<span className="rounded-full bg-muted px-2 py-1">Local only</span></div>
+                    <div className="mt-4 flex flex-wrap gap-2"><Button size="sm" onClick={() => switchProject(project)} variant={isActive ? "default" : "outline"}>{isActive ? "Open workspace" : "Open project"}</Button><Button size="sm" variant="ghost" onClick={() => renameProject(project)} aria-label={`Rename ${project.name}`}>Rename</Button><Button size="sm" variant="ghost" onClick={() => duplicateProject(project)} aria-label={`Duplicate ${project.name}`}><Copy className="size-4" /></Button><Button size="sm" variant="ghost" onClick={() => updateProjectStatus(project, project.status === "active" ? "archived" : "active")} aria-label={`${project.status === "active" ? "Archive" : "Restore"} ${project.name}`}>{project.status === "active" ? <Archive className="size-4" /> : <RotateCw className="size-4" />}</Button>{projects.length > 1 && <Button size="sm" variant="ghost" className="text-primary" onClick={() => deleteProject(project)} aria-label={`Delete ${project.name}`}><Trash2 className="size-4" /></Button>}</div>
+                  </article>
+                })}
+              </div>
+            </section>
+          )}
+          {activeModule !== "Projects" && <>
           <Hero
             estimate={estimate}
             isCompliant={isCompliant}
@@ -1002,6 +1137,7 @@ export default function Page() {
           <DetailedBreakdown estimate={estimate} unit={unit} />
 
           <ComplianceLog findings={findings} />
+          </>}
         </main>
 
         <Footer />
@@ -1286,6 +1422,7 @@ function PlannerMetric({ label, value }: { label: string; value: string }) {
  * ==========================================================================*/
 
 const workspaceModules = [
+  { label: "Projects", icon: FolderOpen },
   { label: "Dashboard", icon: LayoutDashboard },
   { label: "House Planner", icon: Home },
   { label: "Floor Plan", icon: Map },
