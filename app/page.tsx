@@ -145,6 +145,7 @@ type Action =
   | { type: "SET_ORIENTATION"; orientation: Orientation }
   | { type: "SET_INPUT"; key: keyof Inputs; value: Inputs[keyof Inputs] }
   | { type: "RESET" }
+  | { type: "LOAD_PROJECT"; inputs: Inputs }
   | { type: "PRESET"; preset: "budget" | "standard" | "premium" }
 
 const DEFAULT_INPUTS: Inputs = {
@@ -184,6 +185,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, inputs: { ...state.inputs, [action.key]: action.value } }
     case "RESET":
       return { ...state, inputs: DEFAULT_INPUTS }
+    case "LOAD_PROJECT":
+      return { ...state, inputs: { ...DEFAULT_INPUTS, ...action.inputs } }
     case "PRESET": {
       const map: Record<typeof action.preset, Partial<Inputs>> = {
         budget: { quality: "standard", concreteGrade: "M20", steelGrade: "Fe415", slabThickness: 110 },
@@ -680,6 +683,36 @@ export default function Page() {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
   const [activeModule, setActiveModule] = React.useState("Dashboard")
   const [plannerSnapshot, setPlannerSnapshot] = React.useState<PlannerSnapshot | null>(null)
+  const [saveStatus, setSaveStatus] = React.useState<"loading" | "saved" | "saving" | "error">("loading")
+  const hasHydratedProject = React.useRef(false)
+
+  React.useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem("buildcalc-project-v2")
+      if (raw) {
+        const saved = JSON.parse(raw) as { inputs?: Inputs; plannerSnapshot?: PlannerSnapshot }
+        if (saved.inputs) dispatch({ type: "LOAD_PROJECT", inputs: saved.inputs })
+        if (saved.plannerSnapshot) setPlannerSnapshot(saved.plannerSnapshot)
+      }
+    } catch {
+      setSaveStatus("error")
+    } finally {
+      hasHydratedProject.current = true
+      setSaveStatus("saved")
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (!hasHydratedProject.current) return
+    setSaveStatus("saving")
+    try {
+      window.localStorage.setItem("buildcalc-project-v2", JSON.stringify({ inputs, plannerSnapshot, savedAt: new Date().toISOString() }))
+      const timer = window.setTimeout(() => setSaveStatus("saved"), 350)
+      return () => window.clearTimeout(timer)
+    } catch {
+      setSaveStatus("error")
+    }
+  }, [inputs, plannerSnapshot])
 
   React.useEffect(() => {
     const updateProgress = () => {
@@ -923,6 +956,14 @@ export default function Page() {
         />
 
         <main className="app-workspace mx-auto w-full min-w-0 px-3 pb-20 pt-24 sm:px-5 lg:px-7 xl:px-8">
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-xs shadow-sm">
+            <div className="flex min-w-0 items-center gap-2">
+              <span className={cn("h-2 w-2 rounded-full", saveStatus === "saved" ? "bg-[#168653]" : saveStatus === "error" ? "bg-primary" : "animate-pulse bg-[#D4FF3F]")} />
+              <span className="truncate font-medium">My residential project</span>
+              <span className="hidden text-muted-foreground sm:inline">Local workspace</span>
+            </div>
+            <span className="shrink-0 text-muted-foreground">{saveStatus === "saving" ? "Saving…" : saveStatus === "error" ? "Save failed" : saveStatus === "loading" ? "Loading…" : "Saved locally"}</span>
+          </div>
           <Hero
             estimate={estimate}
             isCompliant={isCompliant}
