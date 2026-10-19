@@ -1247,6 +1247,7 @@ function HousePlanner({
   const [openingType, setOpeningType] = React.useState<PlannerOpening["type"]>("door")
   const [openingWidth, setOpeningWidth] = React.useState(3)
   const [planMessage, setPlanMessage] = React.useState("")
+  const skipSnapshotRef = React.useRef(false)
 
   const rooms = roomsByFloor[floor]
   const selected = rooms.find((room) => room.id === selectedId) ?? rooms[0]
@@ -1257,6 +1258,7 @@ function HousePlanner({
 
   React.useEffect(() => {
     if (!initialSnapshot) return
+    skipSnapshotRef.current = true
     setPlannerPlotLength(initialSnapshot.plotLength)
     setPlannerPlotWidth(initialSnapshot.plotWidth)
     setPlotUnit(initialSnapshot.plotUnit)
@@ -1268,7 +1270,11 @@ function HousePlanner({
   }, [initialSnapshot])
 
   React.useEffect(() => {
-    onSnapshotChange({
+    if (skipSnapshotRef.current) {
+      skipSnapshotRef.current = false
+      return
+    }
+    const snapshot = {
       plotLength: plannerPlotLength,
       plotWidth: plannerPlotWidth,
       plotUnit,
@@ -1276,9 +1282,19 @@ function HousePlanner({
       floors,
       setbacks,
       roomsByFloor,
-      generatedAt: new Date().toISOString(),
-    })
-  }, [plannerPlotLength, plannerPlotWidth, plotUnit, plotOrientation, floors, setbacks, roomsByFloor, onSnapshotChange])
+    }
+    const comparable = (value: Partial<PlannerSnapshot> | null) => value ? JSON.stringify({
+      plotLength: value.plotLength,
+      plotWidth: value.plotWidth,
+      plotUnit: value.plotUnit,
+      plotOrientation: value.plotOrientation,
+      floors: value.floors,
+      setbacks: value.setbacks,
+      roomsByFloor: value.roomsByFloor,
+    }) : ""
+    if (comparable(snapshot) === comparable(initialSnapshot)) return
+    onSnapshotChange({ ...snapshot, generatedAt: new Date().toISOString() })
+  }, [plannerPlotLength, plannerPlotWidth, plotUnit, plotOrientation, floors, setbacks, roomsByFloor, onSnapshotChange, initialSnapshot])
 
   React.useEffect(() => {
     if (totalBuiltUp > 0 && Math.round(totalBuiltUp) !== Math.round(builtUpArea)) onBuiltUpAreaChange(Math.round(totalBuiltUp))
