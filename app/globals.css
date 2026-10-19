@@ -4,25 +4,25 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #FFFFFF;
-  --foreground: #151515;
+  --background: #F7F5FA;
+  --foreground: #17151C;
   --card: #FFFFFF;
   --card-foreground: #151515;
   --popover: #FFFFFF;
   --popover-foreground: #151515;
-  --primary: #D92330;
+  --primary: #E34234;
   --primary-foreground: #FFFFFF;
-  --secondary: #F2F2F2;
-  --secondary-foreground: #151515;
-  --muted: #F2F2F2;
-  --muted-foreground: #626262;
-  --accent: #FFF3C4;
-  --accent-foreground: #151515;
+  --secondary: #EDE2FC;
+  --secondary-foreground: #17151C;
+  --muted: #F7F5FA;
+  --muted-foreground: #6B6872;
+  --accent: #D4FF3F;
+  --accent-foreground: #17151C;
   --destructive: #D92330;
   --destructive-foreground: #FFFFFF;
-  --border: #E2E2E2;
-  --input: #D0D0D0;
-  --ring: #FF303B;
+  --border: #E8E2EF;
+  --input: #D8D0E2;
+  --ring: #E34234;
   --chart-1: #D92330;
   --chart-2: #FFD447;
   --chart-3: #626262;
@@ -40,25 +40,25 @@
 }
 
 .dark {
-  --background: #101010;
-  --foreground: #F5F5F5;
-  --card: #1C1C1C;
-  --card-foreground: #F5F5F5;
-  --popover: #252525;
+  --background: #100F14;
+  --foreground: #F7F5FA;
+  --card: #211E27;
+  --card-foreground: #F7F5FA;
+  --popover: #211E27;
   --popover-foreground: #F5F5F5;
-  --primary: #FF303B;
-  --primary-foreground: #101010;
-  --secondary: #252525;
-  --secondary-foreground: #F5F5F5;
-  --muted: #252525;
-  --muted-foreground: #B8B8B8;
-  --accent: #3A3219;
-  --accent-foreground: #FFD447;
+  --primary: #E34234;
+  --primary-foreground: #FFFFFF;
+  --secondary: #302838;
+  --secondary-foreground: #F7F5FA;
+  --muted: #211E27;
+  --muted-foreground: #B9B3C1;
+  --accent: #D4FF3F;
+  --accent-foreground: #17151C;
   --destructive: #D92330;
   --destructive-foreground: #FFFFFF;
-  --border: #343434;
-  --input: #4A4A4A;
-  --ring: #FFD447;
+  --border: #3A3542;
+  --input: #514A5B;
+  --ring: #D4FF3F;
   --chart-1: #FF303B;
   --chart-2: #FFD447;
   --chart-3: #B8B8B8;
@@ -76,6 +76,7 @@
 
 @theme inline {
   --font-sans: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: var(--font-playfair), Georgia, serif;
   --font-mono: var(--font-inter-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -138,6 +139,31 @@
 }
 @utility neon-text {
   color: var(--primary);
+}
+@utility editorial {
+  font-family: var(--font-playfair), Georgia, serif;
+  letter-spacing: -0.045em;
+}
+@utility creative-hero {
+  background: linear-gradient(135deg, #F7F5FA 0%, #EDE2FC 58%, #CBB3E8 100%);
+}
+.dark .creative-hero {
+  background: linear-gradient(135deg, #100F14 0%, #211E27 58%, #302838 100%);
+}
+.creative-orb {
+  border-radius: 999px;
+  background: linear-gradient(135deg, #E34234 8%, #9C55D7 47%, #CBB3E8 100%);
+  box-shadow: inset -18px -22px 32px rgb(23 21 28 / .24), inset 12px 12px 22px rgb(255 255 255 / .25), 0 28px 60px rgb(122 76 160 / .23);
+  transform: rotate(25deg);
+}
+.creative-orbit {
+  border: 2px solid #D4FF3F;
+  border-radius: 50%;
+  transform: rotate(-21deg) skewX(-12deg);
+}
+@utility chartreuse-panel {
+  background: #D4FF3F;
+  color: #17151C;
 }
 .dark .neon-text { color: #F87171; }
 @utility neon-border {

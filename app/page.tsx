@@ -1472,12 +1472,13 @@ function Hero({
   onReset: () => void
 }) {
   return (
-    <section className="relative overflow-hidden rounded-2xl glass-strong p-5 sm:p-8">
-  <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+    <section className="creative-hero relative overflow-hidden rounded-[2rem] border border-[#E8E2EF] p-5 shadow-[0_24px_80px_-38px_rgb(122_76_160_/_0.38)] sm:p-8 lg:p-10">
+  <div className="pointer-events-none absolute -right-12 -top-20 h-72 w-72 rounded-full bg-[#D4FF3F]/30 blur-3xl" />
+  <div className="pointer-events-none absolute -bottom-28 left-1/3 h-80 w-80 rounded-full bg-[#E34234]/10 blur-3xl" />
 
-      <div className="relative grid items-end gap-8 md:grid-cols-2">
+      <div className="relative grid items-center gap-10 md:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#CBB3E8] bg-white/60 px-3 py-1 text-xs shadow-sm dark:bg-white/10">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
@@ -1485,11 +1486,11 @@ function Hero({
             <span className="font-mono uppercase tracking-[0.2em] text-primary">INDIA · 2026</span>
           </div>
 
-          <h1 className="mt-4 text-balance text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-            Residential construction estimation, made precise.
+          <h1 className="editorial mt-5 max-w-2xl text-balance text-5xl font-semibold leading-[0.92] sm:text-6xl lg:text-7xl">
+            Plan. <span className="block">Calculate.</span> <span className="block text-primary">Build Smarter.</span>
           </h1>
-          <p className="mt-3 max-w-xl text-pretty text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Build quantities, costs and transparent IS-code checks from one connected project model.
+          <p className="mt-5 max-w-lg text-pretty text-sm leading-relaxed text-foreground/75 sm:text-base">
+            AI-powered residential construction, cost estimation and structural design tools built for modern India.
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -1532,7 +1533,19 @@ function Hero({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:grid-cols-2">
+        <div className="relative min-h-[290px] overflow-hidden rounded-[1.75rem] border border-white/60 bg-white/25 p-4 shadow-inner backdrop-blur-sm sm:min-h-[330px]">
+          <div className="creative-orbit absolute left-1/2 top-1/2 h-48 w-[22rem] -translate-x-1/2 -translate-y-1/2" />
+          <div className="creative-orb absolute left-[22%] top-[16%] h-36 w-36 sm:h-44 sm:w-44" />
+          <div className="creative-orb absolute right-[8%] top-[36%] h-32 w-32 opacity-90 sm:h-40 sm:w-40" />
+          <div className="absolute bottom-4 left-4 rounded-2xl border border-white/70 bg-white/85 p-4 shadow-xl backdrop-blur dark:bg-[#211E27]/90">
+            <div className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">Estimated Cost</div>
+            <div className="mt-1 font-display text-2xl font-semibold">{fmtINR(estimate.total)}</div>
+            <div className="mt-2 flex items-center gap-1 text-xs font-semibold text-[#168653]"><span className="h-1.5 w-1.5 rounded-full bg-[#168653]" /> Live estimate</div>
+          </div>
+          <div className="chartreuse-panel absolute right-4 top-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] shadow-lg">India focused</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 md:col-span-2 md:grid-cols-4">
           <StatCard
             icon={Banknote}
             label="Estimated Cost"

@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Playfair_Display } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 const interMono = Inter({ subsets: ["latin"], variable: "--font-inter-mono" })
+const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfair" })
 
 export const metadata: Metadata = {
-  title: "BuildCalc Pro — Intelligent Structural Estimator | by Siddhu Pogula",
+  title: "BuildCalc Pro — Plan. Calculate. Build Smarter.",
   description:
-    "Production-grade residential construction estimator for the Indian market. IS 456, IS 875 & IS 1893 compliant validation engine with educational reasoning. Created by Siddhu Pogula.",
+    "AI-powered residential construction, cost estimation and structural design tools built for modern India. Created by Siddhu Pogula.",
   generator: "v0.app",
   keywords: [
     "construction estimator India",
@@ -26,8 +27,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#101010" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F5FA" },
+    { media: "(prefers-color-scheme: dark)", color: "#100F14" },
   ],
   userScalable: true,
   width: "device-width",
@@ -54,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${interMono.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${interMono.variable} ${playfair.variable}`} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
