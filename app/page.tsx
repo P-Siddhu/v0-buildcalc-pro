@@ -1121,6 +1121,7 @@ export default function Page() {
   builtUpArea={inputs.builtUpArea}
   onBuiltUpAreaChange={(area) => set("builtUpArea", area)}
   onSnapshotChange={setPlannerSnapshot}
+  initialSnapshot={plannerSnapshot}
   />
 
           <div className="mt-8 grid min-w-0 grid-cols-1 gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(300px,2fr)]">
@@ -1151,6 +1152,16 @@ export default function Page() {
  *  HOUSE PLANNER + 2D FLOOR PLAN
  * ==========================================================================*/
 
+type PlannerOpening = {
+  id: string
+  type: "door" | "window" | "sliding" | "double" | "ventilator"
+  wall: "top" | "right" | "bottom" | "left"
+  offset: number
+  width: number
+  height: number
+  sillHeight?: number
+}
+
 type PlannerRoom = {
   id: string
   name: string
@@ -1163,6 +1174,8 @@ type PlannerRoom = {
   notes: string
   x: number
   y: number
+  locked?: boolean
+  openings?: PlannerOpening[]
 }
 
 type PlannerFloor = "ground" | "first" | "second"
@@ -1175,6 +1188,7 @@ type PlannerSnapshot = {
   floors: string
   setbacks: { front: number; rear: number; left: number; right: number }
   roomsByFloor: Record<PlannerFloor, PlannerRoom[]>
+  generatedAt?: string
 }
 
 const ROOM_PRESETS = [
@@ -1200,12 +1214,14 @@ function HousePlanner({
   builtUpArea,
   onBuiltUpAreaChange,
   onSnapshotChange,
+  initialSnapshot,
 }: {
   plotLength: number
   plotWidth: number
   builtUpArea: number
   onBuiltUpAreaChange: (area: number) => void
   onSnapshotChange: (snapshot: PlannerSnapshot) => void
+  initialSnapshot: PlannerSnapshot | null
 }) {
   const [floor, setFloor] = React.useState<PlannerFloor>("ground")
   const [plannerPlotLength, setPlannerPlotLength] = React.useState(plotLength)
@@ -1226,6 +1242,11 @@ function HousePlanner({
   const [drag, setDrag] = React.useState<{ id: string; x: number; y: number; px: number; py: number } | null>(null)
   const [vastuMode, setVastuMode] = React.useState(false)
   const [isArranging, setIsArranging] = React.useState(false)
+  const [viewMode, setViewMode] = React.useState<"2D" | "3D">("2D")
+  const [selectedWall, setSelectedWall] = React.useState<{ roomId: string; wall: PlannerOpening["wall"] } | null>(null)
+  const [openingType, setOpeningType] = React.useState<PlannerOpening["type"]>("door")
+  const [openingWidth, setOpeningWidth] = React.useState(3)
+  const [planMessage, setPlanMessage] = React.useState("")
 
   const rooms = roomsByFloor[floor]
   const selected = rooms.find((room) => room.id === selectedId) ?? rooms[0]
@@ -1233,6 +1254,18 @@ function HousePlanner({
   const totalRoomArea = rooms.reduce((sum, room) => sum + roomArea(room), 0)
   const totalBuiltUp = Object.values(roomsByFloor).reduce((sum, floorRooms) => sum + floorRooms.reduce((s, room) => s + roomArea(room), 0), 0)
   const remainingPlot = Math.max(0, plotArea - totalRoomArea)
+
+  React.useEffect(() => {
+    if (!initialSnapshot) return
+    setPlannerPlotLength(initialSnapshot.plotLength)
+    setPlannerPlotWidth(initialSnapshot.plotWidth)
+    setPlotUnit(initialSnapshot.plotUnit)
+    setPlotOrientation(initialSnapshot.plotOrientation)
+    setFloors(initialSnapshot.floors)
+    setSetbacks(initialSnapshot.setbacks)
+    setRoomsByFloor(initialSnapshot.roomsByFloor)
+    setSelectedId(initialSnapshot.roomsByFloor.ground[0]?.id ?? "")
+  }, [initialSnapshot])
 
   React.useEffect(() => {
     onSnapshotChange({
@@ -1243,6 +1276,7 @@ function HousePlanner({
       floors,
       setbacks,
       roomsByFloor,
+      generatedAt: new Date().toISOString(),
     })
   }, [plannerPlotLength, plannerPlotWidth, plotUnit, plotOrientation, floors, setbacks, roomsByFloor, onSnapshotChange])
 
@@ -1319,6 +1353,48 @@ function HousePlanner({
     setDrag(null)
   }
 
+  const generateFloorPlan = () => {
+    const usableLength = Math.max(12, plannerPlotLength - setbacks.left - setbacks.right)
+    const usableWidth = Math.max(12, plannerPlotWidth - setbacks.front - setbacks.rear)
+    const requested = rooms.length ? rooms : initialPlannerRooms
+    const cols = usableLength >= 42 ? 3 : 2
+    const cellLength = usableLength / cols
+    const rows = Math.ceil(requested.length / cols)
+    const cellWidth = usableWidth / Math.max(rows, 1)
+    const generated = requested.map((room, index) => {
+      const col = index % cols
+      const row = Math.floor(index / cols)
+      const length = Math.max(7, Math.min(room.length, cellLength - 1))
+      const width = Math.max(6, Math.min(room.width, cellWidth - 1))
+      return { ...room, length, width, x: 2 + ((setbacks.left + col * cellLength) / plannerPlotLength) * 96, y: 2 + ((setbacks.front + row * cellWidth) / plannerPlotWidth) * 66, openings: room.openings ?? [] }
+    })
+    const fits = generated.every((room) => room.length <= cellLength - 0.5 && room.width <= cellWidth - 0.5)
+    if (!fits) {
+      setPlanMessage("Some rooms do not fit inside the setback envelope. Reduce room sizes or increase the plot dimensions.")
+      return
+    }
+    setPlanMessage(`Generated ${generated.length} connected rooms inside a ${Math.round(usableLength)} × ${Math.round(usableWidth)} ${plotUnit} buildable footprint.`)
+    setIsArranging(true)
+    updateRooms(generated)
+    window.setTimeout(() => setIsArranging(false), 450)
+  }
+
+  const addOpening = () => {
+    if (!selectedWall) return
+    const room = rooms.find((item) => item.id === selectedWall.roomId)
+    if (!room) return
+    const wallLength = selectedWall.wall === "top" || selectedWall.wall === "bottom" ? room.length : room.width
+    const existing = room.openings ?? []
+    const requestedWidth = Math.min(Math.max(1.5, openingWidth), Math.max(1.5, wallLength - 2))
+    const overlaps = existing.some((opening) => opening.wall === selectedWall.wall && Math.abs(opening.offset - Math.min(wallLength - requestedWidth, Math.max(1, wallLength / 2))) < (opening.width + requestedWidth) / 2 + 1)
+    if (overlaps) { setPlanMessage("That opening overlaps an existing opening or is too close to a corner."); return }
+    const opening: PlannerOpening = { id: `opening-${Date.now()}`, type: openingType, wall: selectedWall.wall, offset: Math.min(wallLength - requestedWidth, Math.max(1, wallLength / 2)), width: requestedWidth, height: openingType === "window" ? 4 : 7, sillHeight: openingType === "window" ? 3 : undefined }
+    updateRooms(rooms.map((item) => item.id === room.id ? { ...item, openings: [...existing, opening] } : item))
+    setPlanMessage(`${openingType} added to the ${selectedWall.wall} wall of ${room.name}.`)
+  }
+
+  const removeSelectedOpening = (room: PlannerRoom, openingId: string) => updateRooms(rooms.map((item) => item.id === room.id ? { ...item, openings: (item.openings ?? []).filter((opening) => opening.id !== openingId) } : item))
+
   const autoArrange = () => {
     setIsArranging(true)
     const arranged = rooms.map((room, index) => ({
@@ -1354,8 +1430,10 @@ function HousePlanner({
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">A preliminary architectural planning surface. Generated layouts are not construction drawings and require professional review.</p>
         </div>
         <div className="flex shrink-0 flex-wrap items-center gap-2 lg:max-w-[430px] lg:justify-end">
-          <Button size="sm" variant="outline" onClick={autoArrange} disabled={isArranging}><WandSparkles data-icon="inline-start" /> Auto arrange</Button>
+          <Button size="sm" onClick={generateFloorPlan} disabled={isArranging}><WandSparkles data-icon="inline-start" /> Generate layout</Button>
+          <Button size="sm" variant="outline" onClick={autoArrange} disabled={isArranging}>Auto arrange</Button>
           <Button size="sm" variant="outline" onClick={optimizeLayout} disabled={isArranging}><Sparkles data-icon="inline-start" /> Optimize</Button>
+          <div className="flex rounded-lg border border-border p-0.5"><Button size="sm" variant={viewMode === "2D" ? "default" : "ghost"} onClick={() => setViewMode("2D")}>2D</Button><Button size="sm" variant={viewMode === "3D" ? "default" : "ghost"} onClick={() => setViewMode("3D")}>3D</Button></div>
           <Button size="sm" variant={vastuMode ? "default" : "outline"} onClick={() => setVastuMode((value) => !value)}><Eye data-icon="inline-start" /> Vastu {vastuMode ? "on" : "off"}</Button>
         </div>
       </div>
@@ -1368,6 +1446,7 @@ function HousePlanner({
         <PlannerSelect label="North / entry" value={plotOrientation} options={["North", "South", "East", "West"]} onChange={setPlotOrientation} />
         <PlannerSelect label="Floors" value={floors} options={["Ground", "G+1", "G+2"]} onChange={setFloors} />
         <div className="flex items-end"><Badge variant="secondary" className="h-9 w-full justify-center">{plotArea.toLocaleString()} {plotUnit === "ft" ? "sqft" : "m²"} plot</Badge></div>
+        <div className="rounded-xl border border-[#D4FF3F]/40 bg-[#D4FF3F]/10 p-2 text-xs"><span className="text-muted-foreground">Buildable after setbacks</span><strong className="mt-1 block">{Math.max(0, (plannerPlotLength - setbacks.left - setbacks.right) * (plannerPlotWidth - setbacks.front - setbacks.rear)).toLocaleString()} {plotUnit === "ft" ? "sqft" : "m²"}</strong></div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 border-b border-border/70 pb-3">
@@ -1375,6 +1454,7 @@ function HousePlanner({
         <div className="ml-auto flex items-center gap-1"><Button size="icon" variant="ghost" onClick={undo} disabled={!history.length} aria-label="Undo"><Undo2 /></Button><Button size="icon" variant="ghost" onClick={redo} disabled={!future.length} aria-label="Redo"><Redo2 /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.min(1.8, value + 0.15))} aria-label="Zoom in"><ZoomIn /></Button><Button size="icon" variant="ghost" onClick={() => setZoom((value) => Math.max(0.65, value - 0.15))} aria-label="Zoom out"><ZoomOut /></Button><Button size="icon" variant="ghost" onClick={() => setZoom(1)} aria-label="Reset zoom"><RotateCcw /></Button></div>
       </div>
 
+      {planMessage && <div role="status" className="mt-4 rounded-xl border border-[#D4FF3F]/40 bg-[#D4FF3F]/10 px-3 py-2 text-sm">{planMessage}</div>}
       <div className="mt-4 grid min-w-0 gap-4 lg:grid-cols-1 xl:grid-cols-[minmax(0,2.15fr)_minmax(280px,1fr)] 2xl:grid-cols-[minmax(0,2.2fr)_minmax(320px,1fr)] xl:items-start">
         <div className="min-w-0 overflow-hidden rounded-2xl border border-border/70 bg-slate-100/80 p-2 dark:bg-slate-950/70">
           <svg viewBox="0 0 100 70" className="h-[clamp(320px,38vw,520px)] w-full touch-none" role="img" aria-label={`${floor} floor interactive plan`} style={{ transform: `scale(${zoom})`, transformOrigin: "center" }} onPointerMove={onRoomPointerMove} onPointerUp={finishDrag}>
@@ -1384,13 +1464,14 @@ function HousePlanner({
             <rect x={2 + setbacks.left / Math.max(plannerPlotLength, 1) * 96} y={2 + setbacks.front / Math.max(plotWidth, 1) * 66} width={96 - (setbacks.left + setbacks.right) / Math.max(plannerPlotLength, 1) * 96} height={66 - (setbacks.front + setbacks.rear) / Math.max(plotWidth, 1) * 66} fill="none" stroke="currentColor" strokeWidth="0.25" strokeDasharray="1 1" className="text-yellow-600 dark:text-yellow-400" />
             <text x="5" y="7" fontSize="2.8" className="fill-slate-600 dark:fill-slate-300">N ↑</text>
             <text x="50" y="67" textAnchor="middle" fontSize="2" className="fill-slate-500">Setback envelope · {plotOrientation} facing</text>
-            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#D92330" : "#252525"} fillOpacity="0.88" stroke={active ? "#FFD447" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#FFD447" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
+            {rooms.map((room) => { const w = Math.max(8, room.length / Math.max(plannerPlotLength, 1) * 96); const h = Math.max(7, room.width / Math.max(plotWidth, 1) * 66); const active = selected?.id === room.id; return <g key={room.id} transform={`translate(${room.x} ${room.y})`} onPointerDown={(event) => onRoomPointerDown(event, room)} className="cursor-move"><rect width={w} height={h} rx="0.8" fill={active ? "#E34234" : "#211E27"} fillOpacity="0.88" stroke={active ? "#D4FF3F" : "#B8B8B8"} strokeWidth={active ? "0.6" : "0.35"} /><line x1="0" y1="0" x2={w} y2="0" stroke={selectedWall?.roomId === room.id && selectedWall.wall === "top" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "top" }) }} /><line x1={w} y1="0" x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "right" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "right" }) }} /><line x1="0" y1={h} x2={w} y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "bottom" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "bottom" }) }} /><line x1="0" y1="0" x2="0" y2={h} stroke={selectedWall?.roomId === room.id && selectedWall.wall === "left" ? "#D4FF3F" : "transparent"} strokeWidth="2" onClick={(event) => { event.stopPropagation(); setSelectedWall({ roomId: room.id, wall: "left" }) }} /><text x={w / 2} y={h / 2 - 1} textAnchor="middle" fontSize="2.5" fill="white" pointerEvents="none">{room.name.slice(0, 16)}</text><text x={w / 2} y={h / 2 + 3} textAnchor="middle" fontSize="2" fill="#FFD447" pointerEvents="none">{Math.round(roomArea(room))} sqft</text>{room.door > 0 && <path d={`M ${w / 2 - 2} 0 Q ${w / 2} 3 ${w / 2 + 2} 0`} fill="none" stroke="#fbbf24" strokeWidth="0.45" />}{room.windows > 0 && <path d={`M 2 ${h} L ${Math.min(w - 2, 2 + room.windows * 2)} ${h}`} stroke="#F87171" strokeWidth="1" />}</g> })}
           </svg>
         </div>
 
         <div className="flex min-w-0 flex-col gap-3">
           <div className="flex items-center justify-between gap-3"><h3 className="font-semibold">Rooms</h3><Button size="sm" onClick={addRoom}><Plus data-icon="inline-start" /> Add room</Button></div>
           <div className="flex max-h-64 min-w-0 flex-col gap-2 overflow-y-auto pr-1">{rooms.map((room) => <button key={room.id} onClick={() => setSelectedId(room.id)} className={cn("flex items-center justify-between rounded-xl border p-3 text-left transition", selected?.id === room.id ? "border-red-400/60 bg-red-400/10" : "border-border/70 bg-background/40 hover:bg-muted")}><span className="min-w-0"><span className="block truncate text-sm font-medium">{room.name}</span><span className="text-xs text-muted-foreground">{room.length} × {room.width} {room.unit} · {Math.round(roomArea(room))} sqft</span></span><DoorOpen className="size-4 shrink-0 text-red-600 dark:text-red-400" /></button>)}</div>
+          {selectedWall && <div className="rounded-2xl border border-[#D4FF3F]/50 bg-[#D4FF3F]/10 p-4"><div className="flex items-center justify-between"><span className="text-xs font-semibold uppercase tracking-wider">Wall editor</span><Button size="sm" variant="ghost" onClick={() => setSelectedWall(null)}>Close</Button></div><p className="mt-1 text-sm text-muted-foreground">{rooms.find((room) => room.id === selectedWall.roomId)?.name} · {selectedWall.wall} wall selected</p><div className="mt-3 grid grid-cols-2 gap-2"><PlannerSelect label="Opening" value={openingType} options={["door", "window", "sliding", "double", "ventilator"]} onChange={(value) => setOpeningType(value as PlannerOpening["type"])} /><PlannerNumber label="Width" value={openingWidth} suffix={plotUnit} onChange={(value) => setOpeningWidth(Math.max(1.5, value))} /></div><Button className="mt-3 w-full" size="sm" onClick={addOpening}>Add opening</Button>{(rooms.find((room) => room.id === selectedWall.roomId)?.openings ?? []).map((opening) => <div key={opening.id} className="mt-2 flex items-center justify-between rounded-lg bg-background/70 px-2 py-1 text-xs"><span>{opening.type} · {opening.width}{plotUnit}</span><Button size="sm" variant="ghost" onClick={() => { const room = rooms.find((item) => item.id === selectedWall.roomId); if (room) removeSelectedOpening(room, opening.id) }}>Remove</Button></div>)}</div>}
           {selected ? <div className="rounded-2xl border border-border/70 bg-background/40 p-4"><div className="mb-3 flex items-center justify-between"><span className="text-xs uppercase tracking-wider text-muted-foreground">Edit room</span><div className="flex gap-1"><Button size="icon" variant="ghost" onClick={duplicateRoom} aria-label="Duplicate room"><Copy /></Button><Button size="icon" variant="ghost" onClick={deleteRoom} aria-label="Delete room"><Trash2 /></Button></div></div><div className="grid gap-3"><PlannerText label="Room name" value={selected.name} onChange={(value) => updateSelected({ name: value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Length" value={selected.length} suffix={selected.unit} onChange={(value) => updateSelected({ length: Math.max(1, value) })} /><PlannerNumber label="Width" value={selected.width} suffix={selected.unit} onChange={(value) => updateSelected({ width: Math.max(1, value) })} /></div><PlannerSelect label="Preset" value={selected.preset} options={ROOM_PRESETS} onChange={(value) => updateSelected({ preset: value, name: value === "Custom Room" ? selected.name : value })} /><div className="grid grid-cols-2 gap-2"><PlannerNumber label="Doors" value={selected.door} onChange={(value) => updateSelected({ door: Math.max(0, value) })} /><PlannerNumber label="Windows" value={selected.windows} onChange={(value) => updateSelected({ windows: Math.max(0, value) })} /></div><PlannerText label="Notes" value={selected.notes} onChange={(value) => updateSelected({ notes: value })} /><div className="rounded-lg bg-orange-500/10 p-2 text-xs text-red-800 dark:text-red-200">Room area: <strong>{Math.round(roomArea(selected))} sqft</strong> · preliminary</div></div></div> : <div className="rounded-xl border border-dashed border-border p-5 text-center text-sm text-muted-foreground">Add a room to begin this floor.</div>}
         </div>
       </div>
