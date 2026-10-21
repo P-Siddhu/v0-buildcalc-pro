@@ -1,160 +1,39 @@
 "use client"
 
 import * as React from "react"
-import { Canvas } from "@react-three/fiber"
-import { Environment, OrbitControls, PerspectiveCamera, ContactShadows, Html } from "@react-three/drei"
+import { Canvas, useThree } from "@react-three/fiber"
+import { ContactShadows, Environment, Html, OrbitControls, PerspectiveCamera } from "@react-three/drei"
 import * as THREE from "three"
 
-export type House3DOpening = {
-  id: string
-  type: "door" | "window" | "sliding" | "double" | "ventilator"
-  wall: "top" | "right" | "bottom" | "left"
-  offset: number
-  width: number
-  height: number
-  sillHeight?: number
+export type House3DOpening = { id: string; type: "door" | "window" | "sliding" | "double" | "ventilator"; wall: "top" | "right" | "bottom" | "left"; offset: number; width: number; height: number; sillHeight?: number }
+export type House3DRoom = { id: string; name: string; length: number; width: number; unit: "ft" | "m"; x: number; y: number; openings?: House3DOpening[] }
+type Props = { rooms: House3DRoom[]; plotLength: number; plotWidth: number; unit: "ft" | "m" }
+type Settings = { wallHeight: number; wallThickness: number; slabThickness: number; showRoof: boolean; showFloors: boolean; showFurniture: boolean; showLabels: boolean; wallColor: string; floorColor: string; floorPreset: "wood" | "tile" | "stone" }
+const DEFAULT_SETTINGS: Settings = { wallHeight: 10, wallThickness: 0.35, slabThickness: 0.45, showRoof: false, showFloors: true, showFurniture: true, showLabels: true, wallColor: "#e8e0d7", floorColor: "#aa8060", floorPreset: "wood" }
+function feet(value: number, unit: "ft" | "m") { return unit === "m" ? value / 0.3048 : value }
+function roomKind(name: string) { return name.toLowerCase() }
+function FloorMaterial({ preset, color }: { preset: Settings["floorPreset"]; color: string }) { return <meshStandardMaterial color={preset === "tile" ? "#d7d4cb" : preset === "stone" ? "#999792" : color} roughness={preset === "wood" ? 0.72 : 0.9} /> }
+function Furniture({ room, x, z, w, d, floorColor }: { room: House3DRoom; x: number; z: number; w: number; d: number; floorColor: string }) {
+  const kind = roomKind(room.name)
+  const wood = "#806047"
+  const fabric = kind.includes("bed") ? "#d7c5ba" : "#7b8290"
+  if (kind.includes("bath") || kind.includes("toilet") || kind.includes("wash")) return <group position={[x, 0.35, z]}><mesh position={[-w * .22, .22, 0]} castShadow><cylinderGeometry args={[Math.min(w, d) * .18, Math.min(w, d) * .18, .35, 24]} /><meshStandardMaterial color="#f5f3ed" roughness={.35} /></mesh><mesh position={[w * .22, .38, 0]} castShadow><boxGeometry args={[w * .3, .55, d * .35]} /><meshStandardMaterial color="#f5f3ed" roughness={.35} /></mesh><mesh position={[0, .55, -d * .28]}><boxGeometry args={[w * .35, .08, d * .18]} /><meshStandardMaterial color="#b8d8dc" roughness={.2} /></mesh></group>
+  if (kind.includes("kitchen")) return <group position={[x, .45, z]}><mesh position={[0, 0, -d * .32]} castShadow><boxGeometry args={[w * .85, .9, .45]} /><meshStandardMaterial color={wood} roughness={.45} /></mesh><mesh position={[0, .48, -d * .32]}><boxGeometry args={[w * .85, .08, .45]} /><meshStandardMaterial color="#d3d0c8" roughness={.28} /></mesh><mesh position={[w * .2, .57, -d * .32]}><cylinderGeometry args={[.16, .16, .04, 20]} /><meshStandardMaterial color="#697078" metalness={.5} /></mesh><mesh position={[w * .26, .55, d * .05]} castShadow><boxGeometry args={[.55, 1.1, .55]} /><meshStandardMaterial color="#d8d9d5" roughness={.4} /></mesh></group>
+  if (kind.includes("dining")) return <group position={[x, .42, z]}><mesh castShadow><boxGeometry args={[Math.min(w * .52, 5), .15, Math.min(d * .38, 3.2)]} /><meshStandardMaterial color={wood} roughness={.5} /></mesh>{[-1, 1].flatMap((side) => [-1, 1].map((end) => <mesh key={`${side}-${end}`} position={[end * Math.min(w * .35, 2.1), -.2, side * Math.min(d * .26, 1.3)]} castShadow><boxGeometry args={[.45, .7, .45]} /><meshStandardMaterial color={wood} /></mesh>))}</group>
+  if (kind.includes("bed")) return <group position={[x, .5, z]}><mesh castShadow><boxGeometry args={[Math.min(w * .62, 7), .55, Math.min(d * .55, 6)]} /><meshStandardMaterial color={wood} roughness={.6} /></mesh><mesh position={[0, .36, .25]}><boxGeometry args={[Math.min(w * .58, 6.7), .15, Math.min(d * .35, 2.7)]} /><meshStandardMaterial color={fabric} roughness={.92} /></mesh><mesh position={[0, .55, -Math.min(d * .2, 1.1)]}><boxGeometry args={[Math.min(w * .58, 6.7), .25, .32]} /><meshStandardMaterial color="#f1e9df" /></mesh><mesh position={[Math.min(w * .42, 2.5), .35, 0]} castShadow><boxGeometry args={[.55, .7, .55]} /><meshStandardMaterial color={wood} /></mesh></group>
+  return <group position={[x, .45, z]}><mesh position={[0, .38, 0]} castShadow><boxGeometry args={[Math.min(w * .65, 8), .75, Math.min(d * .22, 2.2)]} /><meshStandardMaterial color={fabric} roughness={.9} /></mesh><mesh position={[0, .42, Math.min(d * .28, 1.8)]} castShadow><boxGeometry args={[Math.min(w * .4, 4.5), .18, Math.min(d * .25, 1.8)]} /><meshStandardMaterial color={wood} roughness={.5} /></mesh></group>
 }
-
-export type House3DRoom = {
-  id: string
-  name: string
-  length: number
-  width: number
-  unit: "ft" | "m"
-  x: number
-  y: number
-  openings?: House3DOpening[]
-}
-
-type Props = {
-  rooms: House3DRoom[]
-  plotLength: number
-  plotWidth: number
-  unit: "ft" | "m"
-}
-
-type Settings = {
-  wallHeight: number
-  wallThickness: number
-  slabThickness: number
-  showRoof: boolean
-  showFloors: boolean
-  wallColor: string
-  floorColor: string
-}
-
-const DEFAULT_SETTINGS: Settings = {
-  wallHeight: 10,
-  wallThickness: 0.35,
-  slabThickness: 0.45,
-  showRoof: true,
-  showFloors: true,
-  wallColor: "#e4ddd2",
-  floorColor: "#bba78e",
-}
-
-function toFeet(value: number, unit: "ft" | "m") {
-  return unit === "m" ? value / 0.3048 : value
-}
-
+function CameraRig({ mode, resetKey }: { mode: "top" | "iso"; resetKey: number }) { const { camera } = useThree(); const controls = React.useRef<any>(null); React.useEffect(() => { const distance = 40; camera.position.set(mode === "top" ? 0 : distance, mode === "top" ? distance : 30, mode === "top" ? 0 : distance); camera.lookAt(0, 0, 0); controls.current?.target.set(0, 0, 0); controls.current?.update() }, [mode, resetKey, camera]); return <OrbitControls ref={controls} makeDefault enableDamping minDistance={8} maxDistance={140} /> }
 function HouseModel({ rooms, plotLength, plotWidth, unit, settings, selectedId, onSelect }: Props & { settings: Settings; selectedId: string | null; onSelect: (id: string) => void }) {
-  const scale = 1
-  const plotX = toFeet(plotLength, unit)
-  const plotZ = toFeet(plotWidth, unit)
-  const getRoom = (room: House3DRoom) => ({
-    x: (room.x / 96) * plotX - plotX / 2,
-    z: (room.y / 66) * plotZ - plotZ / 2,
-    width: toFeet(room.length, room.unit as "ft" | "m"),
-    depth: toFeet(room.width, room.unit as "ft" | "m"),
-  })
-
-  const walls: { key: string; x: number; z: number; length: number; horizontal: boolean; roomId: string; opening?: House3DOpening }[] = []
-  const seen = new Set<string>()
-  rooms.forEach((room) => {
-    const r = getRoom(room)
-    const edges = [
-      { side: "top" as const, x: r.x + r.width / 2, z: r.z, length: r.width, horizontal: true },
-      { side: "bottom" as const, x: r.x + r.width / 2, z: r.z + r.depth, length: r.width, horizontal: true },
-      { side: "left" as const, x: r.x, z: r.z + r.depth / 2, length: r.depth, horizontal: false },
-      { side: "right" as const, x: r.x + r.width, z: r.z + r.depth / 2, length: r.depth, horizontal: false },
-    ]
-    edges.forEach((edge) => {
-      const key = `${edge.horizontal ? "h" : "v"}:${edge.x.toFixed(3)}:${edge.z.toFixed(3)}:${edge.length.toFixed(3)}`
-      if (seen.has(key)) return
-      seen.add(key)
-      const opening = (room.openings ?? []).find((item) => item.wall === edge.side)
-      walls.push({ key, x: edge.x, z: edge.z, length: edge.length, horizontal: edge.horizontal, roomId: room.id, opening })
-    })
-  })
-
-  return <>
-    <color attach="background" args={["#d8d5cf"]} />
-    <ambientLight intensity={1.1} />
-    <directionalLight position={[20, 28, 12]} intensity={2.2} castShadow shadow-mapSize={[2048, 2048]} />
-    <Environment preset="studio" />
-    <group scale={[scale, scale, scale]}>
-      <mesh position={[0, -settings.slabThickness / 2, 0]} receiveShadow>
-        <boxGeometry args={[plotX + 8, settings.slabThickness, plotZ + 8]} />
-        <meshStandardMaterial color="#a9a49c" roughness={0.95} />
-      </mesh>
-      {settings.showFloors && rooms.map((room) => {
-        const r = getRoom(room)
-        return <mesh key={`floor-${room.id}`} position={[r.x + r.width / 2, 0, r.z + r.depth / 2]} receiveShadow onClick={() => onSelect(room.id)}>
-          <boxGeometry args={[r.width, 0.18, r.depth]} />
-          <meshStandardMaterial color={selectedId === room.id ? "#c8e66d" : settings.floorColor} roughness={0.8} />
-        </mesh>
-      })}
-      {walls.map((wall) => {
-        const height = settings.wallHeight
-        const opening = wall.opening
-        const openingWidth = opening ? toFeet(opening.width, unit) : 0
-        const openingHeight = opening ? Math.min(height, toFeet(opening.height, unit)) : 0
-        const lower = opening?.type === "window" || opening?.type === "ventilator" ? Math.max(0, toFeet(opening.sillHeight ?? 3, unit)) : 0
-        const segment = (width: number, centerOffset: number, y: number, h: number) => <mesh key={`${wall.key}-${width}-${y}`} position={[wall.horizontal ? wall.x + centerOffset : wall.x, y, wall.horizontal ? wall.z : wall.z + centerOffset]} castShadow receiveShadow onClick={() => onSelect(wall.roomId)}>
-          <boxGeometry args={[wall.horizontal ? width : settings.wallThickness, h, wall.horizontal ? settings.wallThickness : width]} />
-          <meshStandardMaterial color={selectedId === wall.roomId ? "#d4ff3f" : settings.wallColor} roughness={0.72} />
-        </mesh>
-        if (!opening || openingWidth <= 0 || openingWidth >= wall.length - 0.2) return segment(wall.length, 0, height / 2, height)
-        const center = Math.min(wall.length - openingWidth / 2, Math.max(openingWidth / 2, opening.offset)) - wall.length / 2
-        const parts: React.ReactNode[] = []
-        const left = wall.length / 2 + center - openingWidth / 2
-        const right = wall.length - left - openingWidth
-        if (left > 0.05) parts.push(segment(left, -wall.length / 2 + left / 2, height / 2, height))
-        if (right > 0.05) parts.push(segment(right, wall.length / 2 - right / 2, height / 2, height))
-        if (lower > 0.05) parts.push(segment(openingWidth, center, lower / 2, lower))
-        if (height - (lower + openingHeight) > 0.05) parts.push(segment(openingWidth, center, lower + openingHeight + (height - lower - openingHeight) / 2, height - lower - openingHeight))
-        return <React.Fragment key={wall.key}>{parts}</React.Fragment>
-      })}
-      {settings.showRoof && <mesh position={[0, settings.wallHeight + 0.4, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
-        <boxGeometry args={[Math.max(plotX * 0.9, 1), 0.65, Math.max(plotZ * 0.9, 1)]} />
-        <meshStandardMaterial color="#5a4f49" roughness={0.9} />
-      </mesh>}
-      {selectedId && <Html position={[0, settings.wallHeight + 1.3, 0]} center><div className="rounded-md border border-white/30 bg-[#17151C]/90 px-2 py-1 text-xs text-white shadow-lg">{rooms.find((room) => room.id === selectedId)?.name}</div></Html>}
-    </group>
-    <ContactShadows position={[0, 0, 0]} opacity={0.32} scale={Math.max(plotX, plotZ) * 1.5} blur={2.5} far={20} />
-  </>
+  const plotX = feet(plotLength, unit), plotZ = feet(plotWidth, unit), wallMap = new Map<string, { x: number; z: number; length: number; horizontal: boolean; roomId: string; opening?: House3DOpening }>()
+  const mapped = rooms.map((room) => ({ room, x: (room.x / 96) * plotX - plotX / 2, z: (room.y / 66) * plotZ - plotZ / 2, w: feet(room.length, room.unit), d: feet(room.width, room.unit) }))
+  mapped.forEach(({ room, x, z, w, d }) => [{ key: `h:${x.toFixed(3)}:${z.toFixed(3)}:${w.toFixed(3)}`, x: x + w / 2, z, length: w, horizontal: true, side: "top" as const }, { key: `h:${x.toFixed(3)}:${(z + d).toFixed(3)}:${w.toFixed(3)}`, x: x + w / 2, z: z + d, length: w, horizontal: true, side: "bottom" as const }, { key: `v:${x.toFixed(3)}:${z.toFixed(3)}:${d.toFixed(3)}`, x, z: z + d / 2, length: d, horizontal: false, side: "left" as const }, { key: `v:${(x + w).toFixed(3)}:${z.toFixed(3)}:${d.toFixed(3)}`, x: x + w, z: z + d / 2, length: d, horizontal: false, side: "right" as const }].forEach((edge) => { const key = `${edge.horizontal ? "h" : "v"}:${edge.x.toFixed(3)}:${edge.z.toFixed(3)}:${edge.length.toFixed(3)}`; if (!wallMap.has(key)) wallMap.set(key, { ...edge, roomId: room.id, opening: room.openings?.find((opening) => opening.wall === edge.side) }) }))
+  const wallSegments = (wall: { x: number; z: number; length: number; horizontal: boolean; roomId: string; opening?: House3DOpening }) => { const opening = wall.opening; const openingWidth = opening ? Math.min(wall.length - .2, feet(opening.width, unit)) : 0; if (!opening || openingWidth <= 0) return [{ offset: 0, length: wall.length, y: settings.wallHeight / 2, height: settings.wallHeight }]; const center = Math.min(wall.length - openingWidth / 2, Math.max(openingWidth / 2, opening.offset)) - wall.length / 2; const left = wall.length / 2 + center - openingWidth / 2, right = wall.length - left - openingWidth; const lower = opening.type === "window" || opening.type === "ventilator" ? Math.min(settings.wallHeight, feet(opening.sillHeight ?? 3, unit)) : 0; return [{ offset: -wall.length / 2 + left / 2, length: left, y: settings.wallHeight / 2, height: settings.wallHeight }, { offset: wall.length / 2 - right / 2, length: right, y: settings.wallHeight / 2, height: settings.wallHeight }, ...(lower ? [{ offset: center, length: openingWidth, y: lower / 2, height: lower }] : []), ...(settings.wallHeight - lower - feet(opening.height, unit) > .05 ? [{ offset: center, length: openingWidth, y: lower + feet(opening.height, unit) / 2 + (settings.wallHeight - lower - feet(opening.height, unit)) / 2, height: settings.wallHeight - lower - feet(opening.height, unit) }] : [])].filter((segment) => segment.length > .05) }
+  return <><color attach="background" args={["#ddd8cf"]} /><ambientLight intensity={1.25} /><directionalLight position={[18, 34, 12]} intensity={2.8} castShadow shadow-mapSize={[2048, 2048]} /><Environment preset="studio" /><mesh position={[0, -.35, 0]} receiveShadow><boxGeometry args={[plotX + 8, .35, plotZ + 8]} /><meshStandardMaterial color="#a7a39a" roughness={1} /></mesh>{settings.showFloors && mapped.map(({ room, x, z, w, d }) => <mesh key={`floor-${room.id}`} position={[x + w / 2, 0, z + d / 2]} receiveShadow onClick={() => onSelect(room.id)}><boxGeometry args={[w, .18, d]} /><FloorMaterial preset={settings.floorPreset} color={selectedId === room.id ? "#d4ff3f" : settings.floorColor} /></mesh>)}{settings.showFurniture && mapped.map(({ room, x, z, w, d }) => w > 5 && d > 5 ? <Furniture key={`furn-${room.id}`} room={room} x={x + w / 2} z={z + d / 2} w={w} d={d} floorColor={settings.floorColor} /> : null)}{Array.from(wallMap.values()).map((wall, index) => wallSegments(wall).map((segment, segmentIndex) => <mesh key={`wall-${index}-${segmentIndex}`} position={[wall.horizontal ? wall.x + segment.offset : wall.x, segment.y, wall.horizontal ? wall.z : wall.z + segment.offset]} castShadow receiveShadow onClick={() => onSelect(wall.roomId)}><boxGeometry args={[wall.horizontal ? segment.length : settings.wallThickness, segment.height, wall.horizontal ? settings.wallThickness : segment.length]} /><meshStandardMaterial color={selectedId === wall.roomId ? "#d4ff3f" : settings.wallColor} roughness={.72} /></mesh>))}{settings.showRoof && <mesh position={[0, settings.wallHeight + .35, 0]} castShadow><boxGeometry args={[plotX * .92, .55, plotZ * .92]} /><meshStandardMaterial color="#66584f" roughness={.9} /></mesh>}{settings.showLabels && selectedId && <Html position={[0, settings.wallHeight + 1, 0]} center><div className="rounded-md border border-white/30 bg-[#17151c]/90 px-2 py-1 text-xs text-white shadow-lg">{rooms.find((room) => room.id === selectedId)?.name}</div></Html>}<ContactShadows position={[0, 0, 0]} opacity={.32} scale={Math.max(plotX, plotZ) * 1.5} blur={2.5} far={35} /></>
 }
-
 export function House3DView({ rooms, plotLength, plotWidth, unit }: Props) {
-  const [settings, setSettings] = React.useState(DEFAULT_SETTINGS)
-  const [selectedId, setSelectedId] = React.useState<string | null>(null)
-  const controls = React.useRef<any>(null)
-  const resetView = () => { controls.current?.reset() }
-  return <div className="overflow-hidden rounded-2xl border border-border/70 bg-[#d8d5cf]" data-testid="house-3d-view">
-    <div className="flex flex-wrap items-center gap-2 border-b border-black/10 bg-[#17151C] p-2 text-white">
-      <span className="mr-auto text-xs font-semibold uppercase tracking-[0.16em]">3D House · geometry preview</span>
-      <button className="rounded-md bg-white/10 px-2 py-1 text-xs hover:bg-white/20" onClick={() => setSettings((value) => ({ ...value, showRoof: !value.showRoof }))}>Roof {settings.showRoof ? "on" : "off"}</button>
-      <button className="rounded-md bg-white/10 px-2 py-1 text-xs hover:bg-white/20" onClick={() => setSettings((value) => ({ ...value, showFloors: !value.showFloors }))}>Floors {settings.showFloors ? "on" : "off"}</button>
-      <button className="rounded-md bg-white/10 px-2 py-1 text-xs hover:bg-white/20" onClick={resetView}>Reset view</button>
-      <label className="flex items-center gap-1 text-xs">Wall <input aria-label="Wall color" type="color" value={settings.wallColor} onChange={(event) => setSettings((value) => ({ ...value, wallColor: event.target.value }))} /></label>
-    </div>
-    <div className="h-[min(68vh,620px)] min-h-[360px] w-full">
-      <Canvas shadows dpr={[1, 1.5]} fallback={<div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">WebGL is unavailable in this browser. The 2D planner remains available.</div>}>
-        <PerspectiveCamera makeDefault position={[Math.max(plotLength, 25), Math.max(plotWidth, 20), Math.max(plotLength, 25)]} fov={42} />
-        <OrbitControls ref={controls} makeDefault enableDamping minDistance={8} maxDistance={120} />
-        <HouseModel rooms={rooms} plotLength={plotLength} plotWidth={plotWidth} unit={unit} settings={settings} selectedId={selectedId} onSelect={setSelectedId} />
-      </Canvas>
-    </div>
-    <div className="flex flex-wrap gap-3 border-t border-black/10 bg-white/70 px-3 py-2 text-[11px] text-slate-700"><span>Drag to orbit</span><span>Scroll or pinch to zoom</span><span>Right-drag to pan</span><span>Defaults: {settings.wallHeight} ft wall height · {settings.wallThickness} ft wall thickness</span></div>
-  </div>
+  const [settings, setSettings] = React.useState(DEFAULT_SETTINGS), [selectedId, setSelectedId] = React.useState<string | null>(null), [mode, setMode] = React.useState<"top" | "iso">("top"), [resetKey, setResetKey] = React.useState(0), [fullscreen, setFullscreen] = React.useState(false)
+  const canvas = React.useRef<HTMLDivElement>(null)
+  const capture = () => { const image = canvas.current?.querySelector("canvas")?.toDataURL("image/png"); if (!image) return; const link = document.createElement("a"); link.download = "buildcalc-3d-floor-plan.png"; link.href = image; link.click() }
+  return <div ref={canvas} className={`${fullscreen ? "fixed inset-3 z-50" : ""} overflow-hidden rounded-2xl border border-border/70 bg-[#ddd8cf]`} data-testid="house-3d-view"><div className="flex flex-wrap items-center gap-2 border-b border-black/10 bg-[#17151c] p-2 text-white"><span className="mr-auto text-xs font-semibold uppercase tracking-[.16em]">3D Floor Plan · furnished</span><button className={`rounded-md px-2 py-1 text-xs ${mode === "top" ? "bg-[#d4ff3f] text-[#17151c]" : "bg-white/10"}`} onClick={() => setMode("top")}>Top-down</button><button className={`rounded-md px-2 py-1 text-xs ${mode === "iso" ? "bg-[#d4ff3f] text-[#17151c]" : "bg-white/10"}`} onClick={() => setMode("iso")}>Isometric</button><button className="rounded-md bg-white/10 px-2 py-1 text-xs" onClick={() => setSettings((value) => ({ ...value, showFurniture: !value.showFurniture }))}>Furniture {settings.showFurniture ? "on" : "off"}</button><button className="rounded-md bg-white/10 px-2 py-1 text-xs" onClick={() => setSettings((value) => ({ ...value, showRoof: !value.showRoof }))}>Roof {settings.showRoof ? "on" : "off"}</button><button className="rounded-md bg-white/10 px-2 py-1 text-xs" onClick={() => setResetKey((value) => value + 1)}>Reset</button><button className="rounded-md bg-white/10 px-2 py-1 text-xs" onClick={capture}>PNG</button><button className="rounded-md bg-white/10 px-2 py-1 text-xs" onClick={() => setFullscreen((value) => !value)}>{fullscreen ? "Exit" : "Fullscreen"}</button><label className="flex items-center gap-1 text-xs">Wall <input aria-label="Wall color" type="color" value={settings.wallColor} onChange={(event) => setSettings((value) => ({ ...value, wallColor: event.target.value }))} /></label><select aria-label="Floor finish" className="rounded bg-white/10 px-1 py-1 text-xs" value={settings.floorPreset} onChange={(event) => setSettings((value) => ({ ...value, floorPreset: event.target.value as Settings["floorPreset"] }))}><option value="wood">Wood</option><option value="tile">Tile</option><option value="stone">Stone</option></select></div><div className="h-[min(68vh,620px)] min-h-[360px] w-full"><Canvas shadows dpr={[1, 1.5]} gl={{ preserveDrawingBuffer: true }} fallback={<div className="flex h-full items-center justify-center p-6 text-center text-sm text-muted-foreground">WebGL is unavailable. The 2D planner remains available.</div>}><PerspectiveCamera makeDefault fov={42} position={[0, 40, 0]} /><CameraRig mode={mode} resetKey={resetKey} /><HouseModel rooms={rooms} plotLength={plotLength} plotWidth={plotWidth} unit={unit} settings={settings} selectedId={selectedId} onSelect={setSelectedId} /></Canvas></div><div className="flex flex-wrap gap-3 border-t border-black/10 bg-white/70 px-3 py-2 text-[11px] text-slate-700"><span>Drag to orbit</span><span>Scroll or pinch to zoom</span><span>Right-drag to pan</span><span>Visual assumptions: {DEFAULT_SETTINGS.wallHeight} ft wall height · {DEFAULT_SETTINGS.wallThickness} ft wall thickness</span></div></div>
 }
