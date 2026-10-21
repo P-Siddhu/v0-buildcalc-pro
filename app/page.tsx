@@ -715,6 +715,9 @@ export default function Page() {
   const [projectQuery, setProjectQuery] = React.useState("")
   const [projectFilter, setProjectFilter] = React.useState<"all" | "active" | "archived">("all")
   const [saveStatus, setSaveStatus] = React.useState<"loading" | "saved" | "saving" | "error">("loading")
+  const [reportSections, setReportSections] = React.useState({ cover: true, architectural: true, structural: true, quantities: true, assumptions: true })
+  const [reportStatus, setReportStatus] = React.useState<"idle" | "generating" | "error">("idle")
+  const [reportError, setReportError] = React.useState("")
   const hasHydratedProject = React.useRef(false)
   const saveTimer = React.useRef<number | null>(null)
 
@@ -858,6 +861,11 @@ export default function Page() {
   }).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
 
   const handleExportPDF = React.useCallback(async () => {
+    if (reportStatus === "generating") return
+    setReportStatus("generating")
+    setReportError("")
+    const snapshotRevision = new Date().toISOString()
+    try {
     const [{ default: jsPDF }, autoTableMod] = await Promise.all([
       import("jspdf"),
       import("jspdf-autotable"),
@@ -1042,6 +1050,40 @@ export default function Page() {
       })
     }
 
+    if (reportSections.structural && foundationSnapshot) {
+      doc.addPage("a3", "landscape")
+      const structuralW = doc.internal.pageSize.getWidth()
+      doc.setFillColor(17, 24, 39); doc.rect(0, 0, structuralW, 54, "F")
+      doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(17); doc.text("Foundation & Structural Plan", 36, 30)
+      doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.text("PRELIMINARY — NOT FOR CONSTRUCTION", structuralW - 36, 30, { align: "right" })
+      doc.setTextColor(17, 24, 39); doc.setFontSize(9); doc.text(`Foundation type: ${foundationSnapshot.foundationType} · ${foundationSnapshot.columns.length} column(s) · ${foundationSnapshot.footings.length} footing(s)`, 36, 76)
+      doc.setDrawColor(31, 41, 55); doc.setLineWidth(1); doc.rect(36, 94, structuralW - 72, 340)
+      doc.setFontSize(8); doc.text("Building footprint / structural review drawing", 48, 112)
+      ;(plannerSnapshot?.roomsByFloor.ground ?? []).forEach((room) => { const x = 60 + (room.x / 100) * (structuralW - 120); const y = 130 + (room.y / 70) * 260; const w = Math.max(24, room.length / Math.max(plannerSnapshot?.plotLength ?? inputs.plotLength, 1) * (structuralW - 120)); const h = Math.max(18, room.width / Math.max(plannerSnapshot?.plotWidth ?? inputs.plotWidth, 1) * 260); doc.setDrawColor(75, 85, 99); doc.setLineWidth(0.5); doc.rect(x, y, w, h); })
+      foundationSnapshot.columns.forEach((column) => { const x = 60 + (column.x / 100) * (structuralW - 120); const y = 130 + (column.y / 70) * 260; doc.setFillColor(17, 24, 39); doc.rect(x - 4, y - 4, 8, 8, "F"); doc.setTextColor(17, 24, 39); doc.setFontSize(8); doc.text(column.id, x + 7, y + 3) })
+      autoTable(doc, { startY: 462, head: [["Column", "Grid", "Section", "Status" ]], body: foundationSnapshot.columns.length ? foundationSnapshot.columns.map((c) => [c.id, `${c.gridX}${c.gridY}`, c.section, c.status]) : [["—", "—", "Not entered", "Preliminary"]], theme: "grid", styles: { fontSize: 8 }, headStyles: { fillColor: [17, 24, 39] } })
+      doc.setTextColor(185, 28, 28); doc.setFontSize(9); doc.text("Structural inputs, loads, soil data, footing sizes, reinforcement, and approval must be supplied and reviewed by a qualified engineer.", 36, doc.internal.pageSize.getHeight() - 34)
+    }
+
+    if (reportSections.quantities) {
+      doc.addPage()
+      doc.setTextColor(17, 24, 39); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("Quantity & Cost Summary", 40, 42)
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.text("Snapshot revision: " + snapshotRevision, 40, 58)
+      autoTable(doc, { startY: 78, head: [["Category", "Amount (₹)", "Status"]], body: estimate.materials.map((m) => [m.label, fmtNum(m.cost), "Geometry / estimator"]), theme: "grid", styles: { fontSize: 9 }, headStyles: { fillColor: [17, 24, 39] } })
+      const costY = ((doc as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 100) + 24
+      autoTable(doc, { startY: costY, head: [["Cost component", "Amount"]], body: [["Material subtotal", fmtINR(estimate.subTotal - estimate.laborCost)], ["Labour", fmtINR(estimate.laborCost)], ["Contingency", fmtINR(estimate.contingencyCost)], ["Total estimate", fmtINR(estimate.total)], ["Cost / sqft", fmtINR(estimate.perSqft)]], theme: "striped", styles: { fontSize: 10 }, headStyles: { fillColor: [17, 24, 39] } })
+      doc.setTextColor(146, 64, 14); doc.setFontSize(9); doc.text("Phase 5 rows with unavailable structural or excavation inputs remain pending in the application and are not invented here.", 40, doc.internal.pageSize.getHeight() - 38)
+    }
+
+    if (reportSections.assumptions) {
+      doc.addPage()
+      doc.setTextColor(17, 24, 39); doc.setFont("helvetica", "bold"); doc.setFontSize(18); doc.text("Assumptions, Warnings & Register", 40, 42)
+      doc.setFont("helvetica", "normal"); doc.setFontSize(10)
+      const warnings = ["This report is generated from one saved project snapshot.", "Architectural plans and visualization are preliminary and not construction drawings.", "Foundation status is preliminary unless the saved review record says otherwise.", "Missing soil, structural load, reinforcement, excavation, and approval data are not fabricated.", `Export revision: ${snapshotRevision}`, `Project revision: ${activeProjectId ?? "unsaved"}`]
+      warnings.forEach((warning, index) => doc.text("• " + warning, 48, 80 + index * 22))
+      autoTable(doc, { startY: 240, head: [["Drawing", "Status", "Revision"]], body: [["Architectural floor plan", plannerSnapshot ? "Preliminary" : "Unavailable", snapshotRevision], ["Foundation plan", foundationSnapshot ? "Preliminary / review required" : "Unavailable", foundationSnapshot?.updatedAt ?? "—"], ["Quantity estimate", estimate ? "Indicative" : "Unavailable", snapshotRevision]], theme: "grid", styles: { fontSize: 9 }, headStyles: { fillColor: [17, 24, 39] } })
+    }
+
     // Footer
     const pageCount = doc.getNumberOfPages()
     for (let p = 1; p <= pageCount; p++) {
@@ -1057,7 +1099,12 @@ export default function Page() {
     }
 
     doc.save(`BuildCalc-Pro_${inputs.builtUpArea}sqft_${Date.now()}.pdf`)
-  }, [inputs, estimate, findings, isCompliant, errorCount, orientation])
+    setReportStatus("idle")
+    } catch (error) {
+      setReportStatus("error")
+      setReportError(error instanceof Error ? error.message : "PDF generation failed. Please retry.")
+    }
+  }, [inputs, estimate, findings, isCompliant, errorCount, orientation, reportSections, reportStatus, plannerSnapshot, foundationSnapshot, activeProjectId])
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -1078,8 +1125,13 @@ export default function Page() {
           isCompliant={isCompliant}
         />
 
-        <main className="app-workspace mx-auto w-full min-w-0 px-3 pb-20 pt-24 sm:px-5 lg:px-7 xl:px-8">
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-xs shadow-sm">
+  <main className="app-workspace mx-auto w-full min-w-0 px-3 pb-20 pt-24 sm:px-5 lg:px-7 xl:px-8">
+  <section className="mb-4 rounded-2xl border border-border bg-card/70 p-4 shadow-sm" aria-labelledby="report-export-heading">
+    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Phase 6 · document export</div><h2 id="report-export-heading" className="mt-1 text-lg font-semibold">Residential Construction Design Report</h2><p className="text-xs text-muted-foreground">One saved project snapshot · preliminary engineering status is preserved.</p></div><Button onClick={handleExportPDF} disabled={reportStatus === "generating"}><Download className="mr-2 size-4" />{reportStatus === "generating" ? "Generating…" : reportStatus === "error" ? "Retry PDF" : "Generate Construction PDF"}</Button></div>
+    <div className="mt-3 flex flex-wrap gap-3 text-xs">{Object.entries(reportSections).map(([key, enabled]) => <label key={key} className="flex items-center gap-1.5"><input type="checkbox" checked={enabled} onChange={(event) => setReportSections((current) => ({ ...current, [key]: event.target.checked }))} />{key[0].toUpperCase() + key.slice(1)}</label>)}</div>
+    {reportError && <p role="alert" className="mt-2 text-xs text-destructive">{reportError}</p>}
+  </section>
+  <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-xs shadow-sm">
             <div className="flex min-w-0 items-center gap-2">
               <span className={cn("h-2 w-2 rounded-full", saveStatus === "saved" ? "bg-[#168653]" : saveStatus === "error" ? "bg-primary" : "animate-pulse bg-[#D4FF3F]")} />
               <span className="truncate font-medium">{projects.find((project) => project.id === activeProjectId)?.name ?? "Project workspace"}</span>
