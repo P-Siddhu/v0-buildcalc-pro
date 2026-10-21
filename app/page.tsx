@@ -75,6 +75,7 @@ import {
 
 import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
+import { FoundationPlan, type FoundationSnapshot } from "@/components/foundation-plan"
 
 const House3DView = dynamic(() => import("@/components/house-3d-view").then((module) => module.House3DView), { ssr: false, loading: () => <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-border/70 bg-muted p-6 text-sm text-muted-foreground">Loading interactive 3D house…</div> })
 import { Button } from "@/components/ui/button"
@@ -148,6 +149,7 @@ type ProjectRecord = {
   status: "active" | "archived"
   inputs: Inputs
   plannerSnapshot: PlannerSnapshot | null
+  foundationSnapshot?: FoundationSnapshot | null
   createdAt: string
   updatedAt: string
 }
@@ -704,6 +706,7 @@ export default function Page() {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false)
   const [activeModule, setActiveModule] = React.useState("Dashboard")
   const [plannerSnapshot, setPlannerSnapshot] = React.useState<PlannerSnapshot | null>(null)
+  const [foundationSnapshot, setFoundationSnapshot] = React.useState<FoundationSnapshot | null>(null)
   const [projects, setProjects] = React.useState<ProjectRecord[]>([])
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
   const [projectQuery, setProjectQuery] = React.useState("")
@@ -732,8 +735,9 @@ export default function Page() {
       setProjects(stored)
       setActiveProjectId(active.id)
       dispatch({ type: "LOAD_PROJECT", inputs: active.inputs })
-      setPlannerSnapshot(active.plannerSnapshot)
-    } catch {
+  setPlannerSnapshot(active.plannerSnapshot)
+  setFoundationSnapshot(active.foundationSnapshot ?? null)
+  } catch {
       setSaveStatus("error")
     } finally {
       hasHydratedProject.current = true
@@ -748,7 +752,7 @@ export default function Page() {
     saveTimer.current = window.setTimeout(() => {
       try {
         const now = new Date().toISOString()
-        const nextProjects = projects.map((project) => project.id === activeProjectId ? { ...project, inputs, plannerSnapshot, updatedAt: now } : project)
+        const nextProjects = projects.map((project) => project.id === activeProjectId ? { ...project, inputs, plannerSnapshot, foundationSnapshot, updatedAt: now } : project)
         window.localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(nextProjects))
         window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, activeProjectId)
         setProjects(nextProjects)
@@ -798,8 +802,9 @@ export default function Page() {
     setActiveProjectId(project.id)
     window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, project.id)
     dispatch({ type: "LOAD_PROJECT", inputs: project.inputs })
-    setPlannerSnapshot(project.plannerSnapshot)
-    setActiveModule("Dashboard")
+  setPlannerSnapshot(project.plannerSnapshot)
+  setFoundationSnapshot(project.foundationSnapshot ?? null)
+  setActiveModule("Dashboard")
   }, [activeProjectId, saveStatus])
 
   const createProject = React.useCallback(() => {
@@ -810,8 +815,9 @@ export default function Page() {
     setActiveProjectId(project.id)
     window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, project.id)
     dispatch({ type: "LOAD_PROJECT", inputs: project.inputs })
-    setPlannerSnapshot(null)
-    setActiveModule("Dashboard")
+  setPlannerSnapshot(null)
+  setFoundationSnapshot(null)
+  setActiveModule("Dashboard")
   }, [persistProjects, projects])
 
   const renameProject = React.useCallback((project: ProjectRecord) => {
@@ -1117,6 +1123,8 @@ export default function Page() {
             onPreset={(p) => dispatch({ type: "PRESET", preset: p })}
             onReset={() => dispatch({ type: "RESET" })}
           />
+
+  {activeModule === "Foundation Plan" && <FoundationPlan rooms={plannerSnapshot?.roomsByFloor.ground ?? []} plotLength={plannerSnapshot?.plotLength ?? inputs.plotLength} plotWidth={plannerSnapshot?.plotWidth ?? inputs.plotWidth} setbacks={plannerSnapshot?.setbacks ?? { front: 5, rear: 3, left: 3, right: 3 }} initialSnapshot={foundationSnapshot} onSnapshotChange={setFoundationSnapshot} />}
 
   <HousePlanner
   plotLength={inputs.plotLength}
@@ -1592,6 +1600,7 @@ const workspaceModules = [
   { label: "Dashboard", icon: LayoutDashboard },
   { label: "House Planner", icon: Home },
   { label: "Floor Plan", icon: Map },
+  { label: "Foundation Plan", icon: Ruler },
   { label: "Quantities", icon: ClipboardList },
   { label: "BOQ", icon: FileSpreadsheet },
   { label: "Settings", icon: Settings },
