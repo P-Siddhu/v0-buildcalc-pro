@@ -76,6 +76,7 @@ import {
 import dynamic from "next/dynamic"
 import { cn } from "@/lib/utils"
 import { FoundationPlan, type FoundationSnapshot } from "@/components/foundation-plan"
+import { QuantitiesBOQ, type QuantitiesSnapshot } from "@/components/quantities-boq"
 
 const House3DView = dynamic(() => import("@/components/house-3d-view").then((module) => module.House3DView), { ssr: false, loading: () => <div className="flex min-h-[360px] items-center justify-center rounded-2xl border border-border/70 bg-muted p-6 text-sm text-muted-foreground">Loading interactive 3D house…</div> })
 import { Button } from "@/components/ui/button"
@@ -150,6 +151,7 @@ type ProjectRecord = {
   inputs: Inputs
   plannerSnapshot: PlannerSnapshot | null
   foundationSnapshot?: FoundationSnapshot | null
+  quantitiesSnapshot?: QuantitiesSnapshot | null
   createdAt: string
   updatedAt: string
 }
@@ -707,6 +709,7 @@ export default function Page() {
   const [activeModule, setActiveModule] = React.useState("Dashboard")
   const [plannerSnapshot, setPlannerSnapshot] = React.useState<PlannerSnapshot | null>(null)
   const [foundationSnapshot, setFoundationSnapshot] = React.useState<FoundationSnapshot | null>(null)
+  const [quantitiesSnapshot, setQuantitiesSnapshot] = React.useState<QuantitiesSnapshot | null>(null)
   const [projects, setProjects] = React.useState<ProjectRecord[]>([])
   const [activeProjectId, setActiveProjectId] = React.useState<string | null>(null)
   const [projectQuery, setProjectQuery] = React.useState("")
@@ -737,6 +740,7 @@ export default function Page() {
       dispatch({ type: "LOAD_PROJECT", inputs: active.inputs })
   setPlannerSnapshot(active.plannerSnapshot)
   setFoundationSnapshot(active.foundationSnapshot ?? null)
+  setQuantitiesSnapshot(active.quantitiesSnapshot ?? null)
   } catch {
       setSaveStatus("error")
     } finally {
@@ -752,7 +756,7 @@ export default function Page() {
     saveTimer.current = window.setTimeout(() => {
       try {
         const now = new Date().toISOString()
-        const nextProjects = projects.map((project) => project.id === activeProjectId ? { ...project, inputs, plannerSnapshot, foundationSnapshot, updatedAt: now } : project)
+        const nextProjects = projects.map((project) => project.id === activeProjectId ? { ...project, inputs, plannerSnapshot, foundationSnapshot, quantitiesSnapshot, updatedAt: now } : project)
         window.localStorage.setItem(PROJECTS_STORAGE_KEY, JSON.stringify(nextProjects))
         window.localStorage.setItem(ACTIVE_PROJECT_STORAGE_KEY, activeProjectId)
         setProjects(nextProjects)
@@ -762,7 +766,7 @@ export default function Page() {
       }
     }, 350)
     return () => { if (saveTimer.current) window.clearTimeout(saveTimer.current) }
-  }, [inputs, plannerSnapshot, activeProjectId])
+  }, [inputs, plannerSnapshot, foundationSnapshot, quantitiesSnapshot, activeProjectId])
 
   React.useEffect(() => {
     const updateProgress = () => {
@@ -804,6 +808,7 @@ export default function Page() {
     dispatch({ type: "LOAD_PROJECT", inputs: project.inputs })
   setPlannerSnapshot(project.plannerSnapshot)
   setFoundationSnapshot(project.foundationSnapshot ?? null)
+  setQuantitiesSnapshot(project.quantitiesSnapshot ?? null)
   setActiveModule("Dashboard")
   }, [activeProjectId, saveStatus])
 
@@ -817,6 +822,7 @@ export default function Page() {
     dispatch({ type: "LOAD_PROJECT", inputs: project.inputs })
   setPlannerSnapshot(null)
   setFoundationSnapshot(null)
+  setQuantitiesSnapshot(null)
   setActiveModule("Dashboard")
   }, [persistProjects, projects])
 
@@ -1125,6 +1131,7 @@ export default function Page() {
           />
 
   {activeModule === "Foundation Plan" && <FoundationPlan rooms={plannerSnapshot?.roomsByFloor.ground ?? []} plotLength={plannerSnapshot?.plotLength ?? inputs.plotLength} plotWidth={plannerSnapshot?.plotWidth ?? inputs.plotWidth} setbacks={plannerSnapshot?.setbacks ?? { front: 5, rear: 3, left: 3, right: 3 }} initialSnapshot={foundationSnapshot} onSnapshotChange={setFoundationSnapshot} />}
+  {activeModule === "Quantities" && <QuantitiesBOQ rooms={plannerSnapshot?.roomsByFloor.ground ?? []} foundation={foundationSnapshot} initialSnapshot={quantitiesSnapshot} onSnapshotChange={setQuantitiesSnapshot} />}
 
   <HousePlanner
   plotLength={inputs.plotLength}
