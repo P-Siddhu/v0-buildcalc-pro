@@ -1126,11 +1126,6 @@ export default function Page() {
         />
 
   <main className="app-workspace mx-auto w-full min-w-0 px-3 pb-20 pt-24 sm:px-5 lg:px-7 xl:px-8">
-  <section className="mb-4 rounded-2xl border border-border bg-card/70 p-4 shadow-sm" aria-labelledby="report-export-heading">
-    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Phase 6 · document export</div><h2 id="report-export-heading" className="mt-1 text-lg font-semibold">Residential Construction Design Report</h2><p className="text-xs text-muted-foreground">One saved project snapshot · preliminary engineering status is preserved.</p></div><Button onClick={handleExportPDF} disabled={reportStatus === "generating"}><Download className="mr-2 size-4" />{reportStatus === "generating" ? "Generating…" : reportStatus === "error" ? "Retry PDF" : "Generate Construction PDF"}</Button></div>
-    <div className="mt-3 flex flex-wrap gap-3 text-xs">{Object.entries(reportSections).map(([key, enabled]) => <label key={key} className="flex items-center gap-1.5"><input type="checkbox" checked={enabled} onChange={(event) => setReportSections((current) => ({ ...current, [key]: event.target.checked }))} />{key[0].toUpperCase() + key.slice(1)}</label>)}</div>
-    {reportError && <p role="alert" className="mt-2 text-xs text-destructive">{reportError}</p>}
-  </section>
   <div className="mb-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card/70 px-4 py-3 text-xs shadow-sm">
             <div className="flex min-w-0 items-center gap-2">
               <span className={cn("h-2 w-2 rounded-full", saveStatus === "saved" ? "bg-[#168653]" : saveStatus === "error" ? "bg-primary" : "animate-pulse bg-[#D4FF3F]")} />
@@ -1208,6 +1203,12 @@ export default function Page() {
           <DetailedBreakdown estimate={estimate} unit={unit} />
 
           <ComplianceLog findings={findings} />
+
+          <section className="mt-8 rounded-2xl border border-border bg-card/70 p-4 shadow-sm sm:p-6" aria-labelledby="report-export-heading">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"><div><div className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Phase 6 · document export</div><h2 id="report-export-heading" className="mt-1 text-lg font-semibold">Residential Construction Design Report</h2><p className="text-xs text-muted-foreground">One saved project snapshot · preliminary engineering status is preserved.</p></div><Button onClick={handleExportPDF} disabled={reportStatus === "generating"}><Download className="mr-2 size-4" />{reportStatus === "generating" ? "Generating…" : reportStatus === "error" ? "Retry PDF" : "Generate Construction PDF"}</Button></div>
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">{Object.entries(reportSections).map(([key, enabled]) => <label key={key} className="flex items-center gap-1.5"><input type="checkbox" checked={enabled} onChange={(event) => setReportSections((current) => ({ ...current, [key]: event.target.checked }))} />{key[0].toUpperCase() + key.slice(1)}</label>)}</div>
+            {reportError && <p role="alert" className="mt-2 text-xs text-destructive">{reportError}</p>}
+          </section>
           </>}
         </main>
 
